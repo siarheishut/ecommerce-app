@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    Defines a modal for selecting a saved address
+-->
+<div th:fragment="address-selector-modal">
+    <div aria-hidden="true" aria-labelledby="addressSelectorModalLabel" class="modal fade" id="addressSelectorModal"
+         tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addressSelectorModalLabel">Select a Saved Address</h5>
+                    <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                </div>
+                <div class="modal-body">
+                    <div th:if="${addresses.isEmpty()}">
+                        <p>You have no saved addresses.</p>
+                    </div>
+                    <div class="list-group" th:unless="${addresses.isEmpty()}">
+                        <a class="list-group-item list-group-item-action" href="#"
+                           onclick="selectAddress(this); return false;"
+                           th:attr="data-address-line=${address.addressLine},
+                                    data-city=${address.city},
+                                    data-country=${address.country},
+                                    data-postal-code=${address.postalCode}"
+                           th:each="address : ${addresses}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1" th:text="${address.name}">Address Name</h5>
+                            </div>
+                            <p class="mb-1"
+                               th:text="${address.addressLine} + ', ' + ${address.city} + ', ' + ${address.country} + ' ' + ${address.postalCode}"></p>
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Handle address selection -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        function selectAddress(element) {
+            document.getElementById('addressLine').value = element.getAttribute('data-address-line');
+            document.getElementById('city').value = element.getAttribute('data-city');
+            document.getElementById('country').value = element.getAttribute('data-country');
+            document.getElementById('postalCode').value = element.getAttribute('data-postal-code');
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addressSelectorModal'));
+            modal.hide();
+        }
+
+        /*]]>*/
+    </script>
+</div>
+
+</body>
+</html>

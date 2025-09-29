@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Validating quantity inputs.
+-->
+<script th:fragment="stock-quantity-script" th:inline="javascript">
+    /*<![CDATA[*/
+    function attachStockQuantityListeners(inputElement) {
+        if (inputElement && !inputElement.dataset.stockListenersAttached) {
+            inputElement.dataset.stockListenersAttached = 'true';
+
+            inputElement.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/[^0-9]/g, '');
+                let intValue = parseInt(value, 10);
+
+                if (isNaN(intValue)) {
+                    e.target.value = '';
+                    return;
+                }
+
+                const maxAttr = e.target.getAttribute('max');
+                if (maxAttr) {
+                    const max = parseInt(maxAttr, 10);
+                    if (!isNaN(max) && intValue > max) {
+                        value = max.toString();
+                    }
+                }
+                e.target.value = value;
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.stock-quantity-input').forEach(attachStockQuantityListeners);
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/admin-layout :: admin-layout(~{::title}, ~{::.content})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Manage Categories</title>
+</head>
+<body>
+<div class="content">
+    <!-- Success/Error Messages -->
+    <div class="alert alert-success alert-dismissible fade show"
+         role="alert" th:if="${successMessage}">
+        <span th:text="${successMessage}"></span>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                type="button"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show"
+         role="alert" th:if="${errorMessage}">
+        <span th:text="${errorMessage}"></span>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                type="button"></button>
+    </div>
+    <!-- Add Button -->
+    <div class="mb-4">
+        <a class="btn btn-primary" th:href="@{/admin/categories/add}">
+            <i class="bi bi-plus-circle"></i> Add Category
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="category : ${categories}">
+                    <td class="align-middle" th:text="${category.name}"></td>
+                    <td class="align-middle text-center">
+                        <span class="badge bg-success"
+                              th:if="${!category.isDeleted}">Active</span>
+                        <span class="badge bg-secondary"
+                              th:if="${category.isDeleted}">Deleted</span>
+                    </td>
+                    <!-- Action Buttons -->
+                    <td>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a class="btn btn-info btn-sm"
+                               th:classappend="${category.isDeleted} ? 'disabled' : ''"
+                               th:disabled="${category.isDeleted}"
+                               th:href="@{/admin/categories/edit/{id}(id=${category.id})}">
+                                <i class="bi bi-pencil-fill"></i>Update</a>
+                            <div th:switch="${category.isDeleted}">
+                                <form th:action="@{/admin/categories/delete/{id}(id=${category.id})}"
+                                      th:case="false"
+                                      th:method="delete">
+                                    <button class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Are you sure you want to delete this category?')"
+                                            type="submit">
+                                        <i class="bi bi-trash-fill"></i> Delete
+                                    </button>
+                                </form>
+                                <form th:action="@{/admin/categories/restore/{id}(id=${category.id})}"
+                                      th:case="true"
+                                      th:method="post">
+                                    <button class="btn btn-warning btn-sm"
+                                            onclick="return confirm('Are you sure you want to restore this category?')"
+                                            type="submit">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                        Restore
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

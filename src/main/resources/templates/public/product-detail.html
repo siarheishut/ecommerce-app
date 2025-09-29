@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/main-layout :: main-layout(~{::title}, ~{::.content})}"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${product.name}">Product Details</title>
+</head>
+<body>
+<div class="content container mt-5">
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <h1 th:text="${product.name}">Product Name</h1>
+            <p class="lead" th:text="${product.description}">Product Description.</p>
+            <h3>
+                <span th:text="${#numbers.formatCurrency(product.price)}">
+                    $0.00</span></h3>
+            <p><strong>Average Rating:</strong>
+                <span th:text="${#numbers.formatDecimal(product.averageRating, 1, 2)}">0.0</span>/5
+                (<span th:text="${product.reviewCount}">0</span> reviews)</p>
+        </div>
+    </div>
+    <hr>
+
+    <div sec:authorize="isAuthenticated()">
+        <h3>Write a Review</h3>
+        <form th:action="@{/products/{id}/reviews(id=${product.id})}" th:object="${newReview}" method="post">
+            <div class="mb-3">
+                <label for="rating" class="form-label">Your Rating</label>
+                <select class="form-select" id="rating" th:field="*{rating}"
+                        th:classappend="${#fields.hasErrors('rating')} ? 'is-invalid' : ''">
+                    <option value="">Choose...</option>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Average</option>
+                    <option value="2">2 - Fair</option>
+                    <option value="1">1 - Poor</option>
+                </select>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"></div>
+            </div>
+            <div class="mb-3">
+                <label for="comment" class="form-label">Your Comment</label>
+                <textarea class="form-control" id="comment" rows="3" th:field="*{comment}"
+                          th:classappend="${#fields.hasErrors('comment')} ? 'is-invalid' : ''"></textarea>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('comment')}" th:errors="*{comment}"></div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+    </div>
+    <div sec:authorize="!isAuthenticated()">
+        <p><a th:href="@{/login}">Log in</a> to write a review.</p>
+    </div>
+
+    <hr class="my-4">
+
+    <h3>Customer Reviews</h3>
+    <div th:if="${reviewsPage.isEmpty()}">
+        <p>No reviews yet. Be the first to write one!</p>
+    </div>
+    <div th:unless="${reviewsPage.isEmpty()}" th:each="review : ${reviewsPage.content}" class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${review.authorUsername}">Author</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+                Rating: <span th:text="${review.rating}">5</span>/5 -
+                <span th:text="${#temporals.format(review.createdAt, 'dd-MMM-yyyy HH:mm')}">Date</span>
+            </h6>
+            <p class="card-text" th:text="${review.comment}">Review comment goes here.</p>
+        </div>
+    </div>
+
+    <nav aria-label="Review pagination" th:if="${reviewsPage.totalPages > 1}">
+        <ul class="pagination">
+            <li class="page-item" th:classappend="${reviewsPage.isFirst()} ? 'disabled'">
+                <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${reviewsPage.number - 1})}">Previous</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, reviewsPage.totalPages - 1)}"
+                th:classappend="${i == reviewsPage.number} ? 'active'">
+                <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${reviewsPage.isLast()} ? 'disabled'">
+                <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${reviewsPage.number + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>

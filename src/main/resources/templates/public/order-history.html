@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/main-layout :: main-layout(~{::title}, ~{::.content})}">
+<head>
+    <title>Order History</title>
+</head>
+<body>
+<div class="container content mt-5">
+    <h2>Your Order History</h2>
+
+    <div th:if="${orders.isEmpty()}">
+        <p class="lead">You haven't placed any orders yet.</p>
+    </div>
+
+    <div class="accordion" id="orderAccordion" th:unless="${orders.isEmpty()}">
+        <div class="accordion-item" th:each="order, iter : ${orders}">
+            <h2 class="accordion-header" th:id="'heading' + ${iter.index}">
+                <button aria-expanded="false" class="accordion-button collapsed"
+                        data-bs-toggle="collapse"
+                        th:aria-controls="'collapse' + ${iter.index}"
+                        th:data-bs-target="'#collapse' + ${iter.index}"
+                        type="button">
+                    <div class="d-flex justify-content-between w-100 me-3">
+                        <span>
+                            <strong>
+                                Order #
+                                <span th:text="${order.orderId}">1</span>
+                            </strong>
+                            - Placed on
+                            <span th:text="${#temporals.format(order.orderDate, 'dd-MMM-yyyy')}">01-Jan-2025</span>
+                        </span>
+                        <span class="badge bg-primary rounded-pill"
+                              th:text="${order.status}">
+                            PENDING
+                        </span>
+                    </div>
+                </button>
+            </h2>
+            <div class="accordion-collapse collapse"
+                 data-bs-parent="#orderAccordion"
+                 th:aria-labelledby="'heading' + ${iter.index}"
+                 th:id="'collapse' + ${iter.index}">
+                <div class="accordion-body">
+                    <p><strong>Total Amount:</strong> <span
+                            th:text="${#numbers.formatCurrency(order.totalAmount)}">$0.00</span>
+                    </p>
+                    <table class="table table-sm">
+                        <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Description</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-end">Price</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${order.items}">
+                            <td th:text="${item.productName}">Product Name</td>
+                            <td th:text="${item.productDescription}">Description</td>
+                            <td class="text-center" th:text="${item.quantity}">
+                                1
+                            </td>
+                            <td class="text-end"
+                                th:text="${#numbers.formatCurrency(item.price)}">
+                                $0.00
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

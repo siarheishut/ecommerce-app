@@ -1,0 +1,178 @@
+<!--
+  This fragment contains two modals:
+  1. #addressesModal: Displays the list of user addresses.
+  2. #addressFormModal: A reusable form for adding or editing an address.
+-->
+<div th:fragment="address-modals">
+    <!-- Address List Modal -->
+    <div aria-hidden="true" aria-labelledby="addressesModalLabel"
+         class="modal fade"
+         id="addressesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addressesModalLabel">
+                        Your Addresses</h5>
+                    <button aria-label="Close" class="btn-close"
+                            data-bs-dismiss="modal" type="button"></button>
+                </div>
+                <div class="modal-body" data-loaded="false"
+                     id="addressesModalContent">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <th:block th:fragment="address-modals-content">
+                        <div class="alert alert-success"
+                             th:if="${addressSuccess}"
+                             th:text="${addressSuccess}"></div>
+                        <div class="alert alert-danger" th:if="${addressError}"
+                             th:text="${addressError}"></div>
+
+                        <!-- Address slots -->
+                        <div th:each="i : ${#numbers.sequence(0, 4)}">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <th:block
+                                            th:if="${addresses != null and i < #lists.size(addresses)}">
+                                        <div th:with="address=${addresses[i]}">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title"
+                                                        th:text="${address.name}">
+                                                        Address Name</h6>
+                                                    <p class="card-text mb-1"
+                                                       th:text="${address.addressLine}"></p>
+                                                    <p class="card-text text-muted"
+                                                       th:text="|${address.city}, ${address.postalCode}|"></p>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-sm btn-outline-primary edit-address-btn"
+                                                            th:data-address-city="${address.city}"
+                                                            th:data-address-country="${address.country}"
+                                                            th:data-address-id="${address.id}"
+                                                            th:data-address-line="${address.addressLine}"
+                                                            th:data-address-name="${address.name}"
+                                                            th:data-address-postal="${address.postalCode}"
+                                                            type="button">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <form method="post"
+                                                          onsubmit="return confirm('Are you sure you want to delete this address?');"
+                                                          th:action="@{/addresses/delete/{id}(id=${address.id})}">
+                                                        <button class="btn btn-sm btn-outline-danger"
+                                                                type="submit">
+                                                            <i class="bi bi-trash-fill"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </th:block>
+
+                                    <!-- Empty Slot View -->
+                                    <th:block
+                                            th:if="${addresses != null and i >= #lists.size(addresses)}">
+                                        <button class="btn btn-light w-100 text-muted add-address-btn"
+                                                type="button">
+                                            <i class="bi bi-plus-circle-dotted"></i>
+                                            Add New Address
+                                        </button>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Address Form Modal -->
+    <div aria-hidden="true" aria-labelledby="addressFormModalLabel"
+         class="modal fade"
+         id="addressFormModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="addressForm" method="post"
+                      th:action="@{/addresses/save}" th:object="${address}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addressFormModalLabel">
+                            Address Details</h5>
+                        <button aria-label="Close" class="btn-close"
+                                data-bs-dismiss="modal"
+                                type="button"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input th:field="*{id}" type="hidden"/>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="addressName">
+                                Address Name</label>
+                            <input class="form-control" id="addressName"
+                                   required
+                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                                   th:field="*{name}" type="text">
+                            <div class="invalid-feedback"
+                                 th:errors="*{name}"
+                                 th:if="${#fields.hasErrors('name')}"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="addressLine">
+                                Address Line</label>
+                            <input class="form-control" id="addressLine"
+                                   required
+                                   th:classappend="${#fields.hasErrors('addressLine')} ? 'is-invalid' : ''"
+                                   th:field="*{addressLine}" type="text">
+                            <div class="invalid-feedback"
+                                 th:errors="*{addressLine}"
+                                 th:if="${#fields.hasErrors('addressLine')}"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="city">City</label>
+                            <input class="form-control" id="city" required
+                                   th:classappend="${#fields.hasErrors('city')} ? 'is-invalid' : ''"
+                                   th:field="*{city}"
+                                   type="text">
+                            <div class="invalid-feedback"
+                                 th:errors="*{city}"
+                                 th:if="${#fields.hasErrors('city')}"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="postalCode">
+                                Postal Code</label>
+                            <input class="form-control" id="postalCode" required
+                                   th:classappend="${#fields.hasErrors('postalCode')} ? 'is-invalid' : ''"
+                                   th:field="*{postalCode}" type="text">
+                            <div class="invalid-feedback"
+                                 th:errors="*{postalCode}"
+                                 th:if="${#fields.hasErrors('postalCode')}"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"
+                                   for="country">Country</label>
+                            <input class="form-control" id="country" required
+                                   th:classappend="${#fields.hasErrors('country')} ? 'is-invalid' : ''"
+                                   th:field="*{country}"
+                                   type="text">
+                            <div class="invalid-feedback"
+                                 th:errors="*{country}"
+                                 th:if="${#fields.hasErrors('country')}"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary"
+                                data-bs-dismiss="modal"
+                                type="button">Close
+                        </button>
+                        <button class="btn btn-primary" type="submit">
+                            Save Address
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

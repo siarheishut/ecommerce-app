@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/admin-layout :: admin-layout(~{::title}, ~{::.content})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${category.id == null ? 'Add Category' : 'Edit Category'}">
+        Category Form</title>
+</head>
+<body>
+<div class="content">
+    <div class="card">
+        <div class="card-body">
+            <form action="#"
+                  method="post"
+                  th:action="@{'/admin/categories/save'}"
+                  th:object="${category}">
+                <input th:field="*{id}" type="hidden"/>
+
+                <div class="mb-3">
+                    <label class="form-label" for="name">Category Name</label>
+                    <input class="form-control" id="name" required
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                           th:field="*{name}"
+                           type="text"/>
+                    <div class="invalid-feedback"
+                         th:errors="*{name}"
+                         th:if="${#fields.hasErrors('name')}"></div>
+                </div>
+
+                <button class="btn btn-primary"
+                        th:onclick="|return confirm(category.id == null ? 'Add the category?' : 'Save changes?')|"
+                        type="submit">Save
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

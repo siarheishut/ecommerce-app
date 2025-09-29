@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/main-layout :: main-layout(~{::title}, ~{::.content})}"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+<body>
+
+<div class="content">
+    <div class="p-5 mb-4 bg-body-tertiary rounded-3">
+        <div class="container-fluid py-1">
+            <div class="alert alert-success alert-dismissible fade show"
+                 role="alert" th:if="${message}">
+                <span th:text="${message}"></span>
+                <button aria-label="Close" class="btn-close"
+                        data-bs-dismiss="alert" type="button"></button>
+            </div>
+
+            <h1 class="display-5 fw-bold">Welcome to E-Commerce</h1>
+
+            <p class="col-md-8 fs-4" sec:authorize="!isAuthenticated()">
+                Your one-stop shop for the best products. Browse our collection
+                and find what you need.
+            </p>
+
+            <p class="col-md-8 fs-4" sec:authorize="isAuthenticated()">
+                Welcome back, <strong sec:authentication="name">User</strong>!
+                We're glad to see you again.
+            </p>
+
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary btn-lg" role="button"
+                   th:href="@{/products/list}">Shop Now</a>
+                <button class="btn btn-secondary btn-lg"
+                        data-bs-target="#addressesModal"
+                        data-bs-toggle="modal" sec:authorize="isAuthenticated()"
+                        type="button">Your Addresses
+                </button>
+                <button class="btn btn-secondary btn-lg"
+                        data-bs-target="#userInfoModal"
+                        data-bs-toggle="modal" sec:authorize="isAuthenticated()"
+                        type="button">Update User Info
+                </button>
+                <a class="btn btn-secondary btn-lg" role="button"
+                   sec:authorize="isAuthenticated()"
+                   th:href="@{/orders/history}">Order History
+                </a>
+                <a class="btn btn-outline-secondary btn-lg" role="button"
+                   sec:authorize="isAuthenticated()"
+                   th:href="@{/change-password}">Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="card border-danger mb-4" sec:authorize="hasRole('ADMIN')">
+        <div class="card-header bg-danger text-white">Admin Panel</div>
+        <div class="card-body">
+            <h5 class="card-title">Management Pages</h5>
+            <p class="card-text">Access administrative sections to manage the store.</p>
+            <div class="d-flex gap-2">
+                <a class="btn btn-danger" th:href="@{/admin/products/list}">Manage Products</a>
+                <a class="btn btn-danger" th:href="@{/admin/categories/list}">Manage Categories</a>
+            </div>
+        </div>
+    </div>
+
+    <div sec:authorize="isAuthenticated()"
+         th:insert="~{fragments/address-modal :: address-modals}"></div>
+
+    <div sec:authorize="isAuthenticated()"
+         th:insert="~{fragments/user-info-modal :: user-info-modal}"></div>
+
+    <!-- Lazy Loading for Modals -->
+    <script sec:authorize="isAuthenticated()" th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const modals = {
+                'addressesModal': {
+                    url: '/fragments/addresses',
+                    contentSelector: '#addressesModalContent'
+                },
+                'userInfoModal': {
+                    url: '/fragments/user-info',
+                    contentSelector: '#userInfoModalContent'
+                }
+            };
+
+            // --- Lazy Loading Logic ---
+            Object.keys(modals).forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    modalElement.addEventListener('show.bs.modal', async function (event) {
+                        const config = modals[modalId];
+                        const contentDiv = modalElement.querySelector(config.contentSelector);
+                        if (contentDiv && contentDiv.getAttribute('data-loaded') !== 'true') {
+                            try {
+                                const response = await fetch(config.url);
+                                contentDiv.innerHTML = await response.text();
+                                contentDiv.setAttribute('data-loaded', 'true');
+
+                                if (modalId === 'addressesModal') {
+                                    initializeAddressButtons();
+                                }
+                            } catch (error) {
+                                contentDiv.innerHTML = '<div class="alert alert-danger">Could not load content. Please try again.</div>';
+                            }
+                        }
+                    });
+                }
+            });
+
+            // --- Address Form ---
+            const addressFormModalEl = document.getElementById('addressFormModal');
+            const addressFormModal = addressFormModalEl ? new bootstrap.Modal(addressFormModalEl) : null;
+            const addressForm = document.getElementById('addressForm');
+
+            function initializeAddressButtons() {
+                document.querySelectorAll('.add-address-btn').forEach(button => {
+                    button.addEventListener('click', function () {
+                        if (!addressForm) return;
+                        addressForm.reset();
+                        addressForm.querySelector('[name="id"]').value = '';
+                        document.getElementById('addressFormModalLabel').innerText = 'Add New Address';
+                        addressFormModal.show();
+                    });
+                });
+
+                document.querySelectorAll('.edit-address-btn').forEach(button => {
+                    button.addEventListener('click', function () {
+                        if (!addressForm) return;
+                        const data = this.dataset;
+                        addressForm.querySelector('[name="id"]').value = data.addressId;
+                        addressForm.querySelector('[name="name"]').value = data.addressName;
+                        addressForm.querySelector('[name="addressLine"]').value = data.addressLine;
+                        addressForm.querySelector('[name="city"]').value = data.addressCity;
+                        addressForm.querySelector('[name="postalCode"]').value = data.addressPostal;
+                        addressForm.querySelector('[name="country"]').value = data.addressCountry;
+                        document.getElementById('addressFormModalLabel').innerText = 'Edit Address';
+                        addressFormModal.show();
+                    });
+                });
+            }
+
+            // --- Re-open modals after form submission ---
+            const openAddressModal = /*[[${openAddressModal}]]*/ false;
+            const addressSuccess = /*[[${addressSuccess}]]*/ null;
+            const addressError = /*[[${addressError}]]*/ null;
+            if (openAddressModal) {
+                if (addressFormModal) addressFormModal.show();
+            } else if (addressSuccess != null || addressError != null) {
+                const addressesModalEl = document.getElementById('addressesModal');
+                if (addressesModalEl) new bootstrap.Modal(addressesModalEl).show();
+            }
+
+            const openUserInfoModal = /*[[${openUserInfoModal}]]*/ false;
+            const userInfoSuccess = /*[[${userInfoSuccess}]]*/ null;
+            if (openUserInfoModal || userInfoSuccess) {
+                const userInfoModalEl = document.getElementById('userInfoModal');
+                if (userInfoModalEl) new bootstrap.Modal(userInfoModalEl).show();
+            }
+        });
+    </script>
+
+    <div class="row" sec:authorize="isAuthenticated()">
+        <div class="col-md-6">
+            <div class="card border-secondary mb-3">
+                <div class="card-header">Your Account Details</div>
+                <div class="card-body text-secondary">
+                    <p class="card-text">
+                        <strong>Username:</strong>
+                        <span sec:authentication="name"></span>
+                    </p>
+                    <p class="card-text">
+                        <strong>Roles:</strong>
+                        <span sec:authentication="principal.authorities"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

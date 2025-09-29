@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/main-layout :: main-layout(~{::title}, ~{::.content})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Products List</title>
+</head>
+<body>
+
+<div class="content">
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         th:if="${successMessage}">
+        <span th:text="${successMessage}"></span>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                type="button"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         th:if="${errorMessage}">
+        <span th:text="${errorMessage}"></span>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
+                type="button"></button>
+    </div>
+
+    <h1 class="mb-4">Our Products</h1>
+
+    <div class="row">
+        <div class="col-md-3">
+            <form id="filter-form" method="GET" th:action="@{/products/list}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="searchName">
+                        Search by Name</label>
+                    <input class="form-control" id="searchName" name="name"
+                           placeholder="Product name..."
+                           th:value="${searchName}" type="text">
+                </div>
+
+                <hr>
+                <h4>Categories</h4>
+
+                <!-- Category Filter -->
+                <ul class="list-group">
+                    <li class="list-group-item"
+                        th:each="category : ${categories}">
+                        <div class="form-check">
+                            <input class="form-check-input" name="categoryIds"
+                                   th:checked="${#lists.contains(selectedCategoryIds, category.id)}"
+                                   th:id="|cat-${category.id}|"
+                                   th:value="${category.id}"
+                                   type="checkbox">
+                            <label class="form-check-label"
+                                   th:for="|cat-${category.id}|"
+                                   th:text="${category.name}"></label>
+                        </div>
+                    </li>
+                </ul>
+
+                <hr>
+                <!-- Availability Filter -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" id="onlyAvailable" name="onlyAvailable"
+                           th:checked="${onlyAvailable}"
+                           type="checkbox" value="true">
+                    <label class="form-check-label" for="onlyAvailable">
+                        Show only available</label>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="mt-3">
+                    <label class="form-label fw-bold">Price Range</label>
+                    <div class="row">
+                        <div class="col-6">
+                            <input class="form-control" id="minPrice"
+                                   max="1000000" min="0" name="minPrice"
+                                   placeholder="Min" step="0.01"
+                                   th:value="${minPrice}"
+                                   type="number">
+                        </div>
+                        <div class="col-6">
+                            <input class="form-control" id="maxPrice"
+                                   max="1000000" min="0" name="maxPrice"
+                                   placeholder="Max" step="0.01"
+                                   th:value="${maxPrice}"
+                                   type="number">
+                        </div>
+                    </div>
+                    <div class="text-danger small mt-1" id="price-error"
+                         style="display: none;"></div>
+                </div>
+
+                <button class="btn btn-primary mt-3 w-100" type="submit">
+                    Filter
+                </button>
+            </form>
+        </div>
+
+        <!-- Products Column -->
+        <div class="col-md-9">
+            <div class="row">
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-4"
+                     th:each="product : ${productPage.content}">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">
+                                <a class="text-decoration-none"
+                                   th:href="@{/products/{id}(id=${product.id})}"
+                                   th:text="${product.name}">Product Name</a>
+                            </h5>
+                            <p class="card-text flex-grow-1"
+                               th:text="${product.description}">
+                                Product description.</p>
+                            <p class="card-text">
+                                <strong>Price:</strong>
+                                $<span th:text="${#numbers.formatDecimal(product.price, 1, 2)}">0.00</span>
+                            </p>
+                            <p class="card-text">
+                                <small class="text-muted"
+                                       th:text="|Stock: ${product.stockQuantity}|">
+                                    Stock: 0</small>
+                            </p>
+                        </div>
+
+                        <!-- Add to Cart Form -->
+                        <div class="card-footer">
+                            <form method="POST" th:action="@{/cart/add}">
+                                <input name="productId" th:value="${product.id}"
+                                       type="hidden"/>
+                                <input name="returnUrl" th:value="${returnUrl}"
+                                       type="hidden"/>
+                                <input th:name="${_csrf.parameterName}"
+                                       th:value="${_csrf.token}"
+                                       type="hidden"/>
+                                <div class="input-group">
+                                    <input class="form-control stock-quantity-input"
+                                           name="quantity"
+                                           th:max="${product.stockQuantity}"
+                                           th:min="${product.stockQuantity > 0 ? 1 : 0}"
+                                           th:value="${product.stockQuantity > 0 ? 1 : 0}"
+                                           type="number">
+                                    <button class="btn btn-success"
+                                            th:disabled="${product.stockQuantity <= 0}"
+                                            type="submit">
+                                        Add to Cart
+                                    </button>
+                                </div>
+                                <div class="text-danger small mt-1"
+                                     th:if="${product.stockQuantity <= 0}">
+                                    Out of stock
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation" th:if="${productPage.totalPages > 1}">
+            <ul class="pagination justify-content-center">
+                <li class="page-item"
+                    th:classappend="${productPage.isFirst()} ? 'disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{/products/list(page=${productPage.number - 1},
+                        categoryIds=${selectedCategoryIds}, name=${searchName}, onlyAvailable=${onlyAvailable},
+                        minPrice=${minPrice}, maxPrice=${maxPrice})}">Previous</a>
+                </li>
+
+                <li class="page-item"
+                    th:classappend="${i == productPage.number} ? 'active' : ''"
+                    th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}">
+                    <a class="page-link"
+                       th:href="@{/products/list(page=${i},
+                       categoryIds=${selectedCategoryIds}, name=${searchName}, onlyAvailable=${onlyAvailable},
+                       minPrice=${minPrice}, maxPrice=${maxPrice})}"
+                       th:text="${i + 1}"></a></li>
+
+                <li class="page-item"
+                    th:classappend="${productPage.isLast()} ? 'disabled' : ''">
+                    <a class="page-link"
+                       th:href="@{/products/list(page=${productPage.number + 1}, categoryIds=${selectedCategoryIds}, name=${searchName}, onlyAvailable=${onlyAvailable}, minPrice=${minPrice}, maxPrice=${maxPrice})}">Next</a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+
+    <div th:replace="~{fragments/stock-quantity-form :: stock-quantity-script}"></div>
+    <!-- Price Validation -->
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterForm = document.getElementById('filter-form');
+            const minPriceInput = document.getElementById('minPrice');
+            const maxPriceInput = document.getElementById('maxPrice');
+            const priceErrorDiv = document.getElementById('price-error');
+
+            function validatePriceRange() {
+                const minPriceStr = minPriceInput.value;
+                const maxPriceStr = maxPriceInput.value;
+
+                if (minPriceStr && maxPriceStr) {
+                    const minPrice = parseFloat(minPriceStr);
+                    const maxPrice = parseFloat(maxPriceStr);
+
+                    if (minPrice > maxPrice) {
+                        priceErrorDiv.textContent = 'Minimum price cannot be greater than maximum price.';
+                        priceErrorDiv.style.display = 'block';
+                        return false;
+                    }
+                }
+
+                priceErrorDiv.style.display = 'none';
+                priceErrorDiv.textContent = '';
+                return true;
+            }
+
+            minPriceInput.addEventListener('input', validatePriceRange);
+            maxPriceInput.addEventListener('input', validatePriceRange);
+
+            minPriceInput.addEventListener('input', function () {
+                if (this.value) {
+                    maxPriceInput.min = this.value;
+                }
+            });
+
+            filterForm.addEventListener('submit', function (event) {
+                if (!validatePriceRange()) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+    <!-- Add to Cart -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('form[action$="/cart/add"]').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    const button = e.target.querySelector('button[type="submit"]');
+                    if (button) {
+                        button.disabled = true;
+                        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                    }
+                });
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

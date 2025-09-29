@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/admin-layout :: admin-layout(~{::title}, ~{::.content})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${product.id == null ? 'Add Product' : 'Edit Product'}">
+        Product Form</title>
+</head>
+<body>
+<div class="content">
+    <div class="card">
+        <div class="card-body">
+            <form action="#"
+                  method="post"
+                  th:action="@{/admin/products/save}"
+                  th:object="${product}">
+                <input th:field="*{id}" type="hidden"/>
+
+                <div class="mb-3">
+                    <label class="form-label" for="name">Product Name</label>
+                    <input class="form-control" id="name" required
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                           th:field="*{name}"
+                           type="text"/>
+                    <div class="invalid-feedback"
+                         th:errors="*{name}"
+                         th:if="${#fields.hasErrors('name')}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"
+                           for="description">Description</label>
+                    <input class="form-control" id="description"
+                           th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"
+                           th:field="*{description}"
+                           type="text"/>
+                    <div class="invalid-feedback"
+                         th:errors="*{description}"
+                         th:if="${#fields.hasErrors('description')}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="price">Price</label>
+                    <input class="form-control" id="price" max="999999.99"
+                           min="0.01"
+                           required step="0.01"
+                           th:classappend="${#fields.hasErrors('price')} ? 'is-invalid' : ''"
+                           th:field="*{price}"
+                           type="number"/>
+                    <div class="invalid-feedback"
+                         th:errors="*{price}"
+                         th:if="${#fields.hasErrors('price')}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="stockQuantity">
+                        Stock Quantity</label>
+                    <input class="form-control stock-quantity-input"
+                           id="stockQuantity" inputmode="numeric"
+                           max="999999" min="0"
+                           required step="1"
+                           th:classappend="${#fields.hasErrors('stockQuantity')} ? 'is-invalid' : ''"
+                           th:field="*{stockQuantity}"
+                           type="number"/>
+                    <div class="invalid-feedback"
+                         th:errors="*{stockQuantity}"
+                         th:if="${#fields.hasErrors('stockQuantity')}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Categories</label>
+                    <div class="form-check"
+                         th:each="category : ${allCategories}">
+                        <input class="form-check-input" th:field="*{categories}"
+                               th:id="${'category-' + category.id}"
+                               th:value="${category.id}"
+                               type="checkbox">
+                        <label class="form-check-label"
+                               th:for="${'category-' + category.id}"
+                               th:text="${category.name}"></label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary"
+                        th:onclick="return confirm(*{id == null} ? 'Add the product?' : 'Save changes?')"
+                        type="submit">Save
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Input validation -->
+    <div th:replace="~{fragments/stock-quantity-form :: stock-quantity-script}"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const priceInput = document.getElementById('price');
+            priceInput.addEventListener('input', function (e) {
+                const value = e.target.value;
+                const decimalIndex = value.indexOf('.');
+
+                if (decimalIndex > -1) {
+                    const decimalPart = value.substring(decimalIndex + 1);
+                    if (decimalPart.length > 2) {
+                        e.target.value = value.substring(0, decimalIndex + 3);
+                    }
+                }
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

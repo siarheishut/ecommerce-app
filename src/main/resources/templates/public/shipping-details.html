@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/main-layout :: main-layout(~{::title}, ~{::.content})}"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Shipping Details</title>
+</head>
+<body>
+<div class="container content mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2>Shipping and Payment</h2>
+            <p>Please provide your shipping details to complete the order.</p>
+            <hr>
+
+            <form method="post"
+                  th:action="@{/orders/place-order}"
+                  th:object="${shippingDetails}">
+
+                <h4>Personal Information</h4>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="form-label" for="firstName">First
+                            Name</label>
+                        <input class="form-control" id="firstName"
+                               th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
+                               th:field="*{firstName}"
+                               type="text">
+                        <div class="invalid-feedback"
+                             th:errors="*{firstName}"
+                             th:if="${#fields.hasErrors('firstName')}"></div>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <label class="form-label" for="lastName">Last
+                            Name</label>
+                        <input class="form-control" id="lastName"
+                               th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
+                               th:field="*{lastName}"
+                               type="text">
+                        <div class="invalid-feedback"
+                             th:errors="*{lastName}"
+                             th:if="${#fields.hasErrors('lastName')}"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="email">Email</label>
+                        <input class="form-control" id="email"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                               th:field="*{email}"
+                               type="email">
+                        <div class="invalid-feedback"
+                             th:errors="*{email}"
+                             th:if="${#fields.hasErrors('email')}"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="phoneNumber">Phone
+                            Number</label>
+                        <input class="form-control" id="phoneNumber"
+                               th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid' : ''"
+                               th:field="*{phoneNumber}"
+                               type="tel">
+                        <div class="invalid-feedback"
+                             th:errors="*{phoneNumber}"
+                             th:if="${#fields.hasErrors('phoneNumber')}"></div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4>Shipping Address</h4>
+                    <button class="btn btn-secondary btn-sm"
+                            data-bs-target="#addressSelectorModal"
+                            data-bs-toggle="modal"
+                            sec:authorize="isAuthenticated()"
+                            type="button">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                        Use a saved address
+                    </button>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-4">
+                        <label class="form-label" for="country">Country</label>
+                        <input class="form-control" id="country"
+                               th:classappend="${#fields.hasErrors('country')} ? 'is-invalid' : ''"
+                               th:field="*{country}"
+                               type="text">
+                        <div class="invalid-feedback"
+                             th:errors="*{country}"
+                             th:if="${#fields.hasErrors('country')}"></div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="form-label" for="city">City</label>
+                        <input class="form-control" id="city"
+                               th:classappend="${#fields.hasErrors('city')} ? 'is-invalid' : ''"
+                               th:field="*{city}"
+                               type="text">
+                        <div class="invalid-feedback"
+                             th:errors="*{city}"
+                             th:if="${#fields.hasErrors('city')}"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="addressLine">
+                            Address Line</label>
+                        <input class="form-control" id="addressLine"
+                               th:classappend="${#fields.hasErrors('addressLine')} ? 'is-invalid' : ''"
+                               th:field="*{addressLine}"
+                               type="text">
+                        <div class="invalid-feedback"
+                             th:errors="*{addressLine}"
+                             th:if="${#fields.hasErrors('addressLine')}"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label" for="postalCode">
+                            Postal Code</label>
+                        <input class="form-control" id="postalCode"
+                               th:classappend="${#fields.hasErrors('postalCode')} ? 'is-invalid' : ''"
+                               th:field="*{postalCode}"
+                               type="text">
+                        <div class="invalid-feedback"
+                             th:errors="*{postalCode}"
+                             th:if="${#fields.hasErrors('postalCode')}"></div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <button class="w-100 btn btn-primary btn-lg" type="submit">
+                    Place Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div th:insert="~{fragments/address-selector-modal :: address-selector-modal}"></div>
+</div>
+
+</body>
+</html>

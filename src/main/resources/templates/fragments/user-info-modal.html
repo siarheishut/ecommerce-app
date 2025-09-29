@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  A modal for updating the user's personal information.
+-->
+<div th:fragment="user-info-modal">
+    <div aria-hidden="true" aria-labelledby="userInfoModalLabel"
+         class="modal fade" id="userInfoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" th:action="@{/user-info/update}"
+                      th:object="${userInfo}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="userInfoModalLabel">
+                            Update Your Information</h5>
+                        <button aria-label="Close" class="btn-close"
+                                data-bs-dismiss="modal" type="button"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success"
+                             th:if="${userInfoSuccess}"
+                             th:text="${userInfoSuccess}"></div>
+                        <div class="alert alert-danger"
+                             th:if="${#fields.hasErrors('*')}">
+                            Please correct the errors below.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="firstName">
+                                First Name</label>
+                            <input class="form-control" id="firstName"
+                                   th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid'"
+                                   th:field="*{firstName}" type="text">
+                            <div class="invalid-feedback"
+                                 th:errors="*{firstName}"
+                                 th:if="${#fields.hasErrors('firstName')}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="lastName">
+                                Last Name</label>
+                            <input class="form-control" id="lastName"
+                                   th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid'"
+                                   th:field="*{lastName}" type="text">
+                            <div class="invalid-feedback"
+                                 th:errors="*{lastName}"
+                                 th:if="${#fields.hasErrors('lastName')}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="phoneNumber">
+                                Phone Number</label>
+                            <input class="form-control" id="phoneNumber"
+                                   th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid'"
+                                   th:field="*{phoneNumber}" type="tel">
+                            <div class="invalid-feedback"
+                                 th:errors="*{phoneNumber}"
+                                 th:if="${#fields.hasErrors('phoneNumber')}"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary"
+                                data-bs-dismiss="modal" type="button">Close
+                        </button>
+                        <button class="btn btn-primary" type="submit">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
