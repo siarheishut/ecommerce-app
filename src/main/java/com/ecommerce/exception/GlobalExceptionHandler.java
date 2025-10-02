@@ -96,4 +96,13 @@ public class GlobalExceptionHandler {
         modelAndView.setViewName("public/error");
         return modelAndView;
     }
+
+    @ExceptionHandler(UserNotAuthenticatedException.class)
+    public String handleUserNotAuthenticated(HttpServletRequest request) {
+        String originalUrl = request.getRequestURI();
+        if (request.getQueryString() != null) {
+            originalUrl += "?" + request.getQueryString();
+        }
+        return "redirect:/login?redirectUrl=" + originalUrl;
+    }
 }

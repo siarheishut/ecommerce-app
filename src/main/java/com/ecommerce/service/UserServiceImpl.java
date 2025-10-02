@@ -7,6 +7,7 @@ import com.ecommerce.entity.Role;
 import com.ecommerce.entity.User;
 import com.ecommerce.exception.ConfigurationException;
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.exception.UserNotAuthenticatedException;
 import com.ecommerce.repository.RoleRepository;
 import com.ecommerce.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -73,7 +73,8 @@ public class UserServiceImpl implements UserService {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null || !authentication.isAuthenticated() ||
         "anonymousUser".equals(authentication.getPrincipal())) {
-      return null;
+      throw new UserNotAuthenticatedException(
+          "No authenticated user found in the security context.");
     }
 
     String username;

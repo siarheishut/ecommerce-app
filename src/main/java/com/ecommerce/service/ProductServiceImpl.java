@@ -71,7 +71,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Page<Product> searchProducts(
-      String name, List<Long> categoryIds, Double minPrice, Double maxPrice, Boolean onlyAvailable, Pageable pageable) {
+      String name, List<Long> categoryIds, Double minPrice, Double maxPrice, Boolean onlyAvailable,
+      Pageable pageable) {
     Specification<Product> specification = Specification.unrestricted();
 
     if (name != null && !name.isBlank()) {
