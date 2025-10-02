@@ -3,11 +3,7 @@ package com.ecommerce.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -18,6 +14,8 @@ import java.util.List;
 
 @Entity
 @NoArgsConstructor
+@ToString
+@EqualsAndHashCode(exclude = {"categories", "reviews", "id", "isDeleted"})
 @Getter
 @SQLDelete(sql = "UPDATE products SET is_deleted = true WHERE id=?")
 @SQLRestriction("is_deleted = false")

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class CartServiceImpl implements CartService {
   private final ProductRepository productRepository;
   private final ShoppingCart shoppingCart;
-  private final Lock cartLock = new ReentrantLock();
+  private final Lock cartLock;
 
   @Override
   @Transactional

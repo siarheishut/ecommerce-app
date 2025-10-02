@@ -1,6 +1,7 @@
 package com.ecommerce.entity;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import java.util.List;
 @Table(name = "categories")
 @SQLDelete(sql = "UPDATE categories SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
+@EqualsAndHashCode(of = "name")
 public class Category {
   @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
   private final List<Product> products = new ArrayList<>();
