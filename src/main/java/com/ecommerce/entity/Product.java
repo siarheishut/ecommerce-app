@@ -1,8 +1,7 @@
 package com.ecommerce.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -10,7 +9,9 @@ import org.hibernate.annotations.SQLRestriction;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -31,13 +32,14 @@ public class Product {
   private final List<Category> categories = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  private final List<Review> reviews = new ArrayList<>();
+  private final Set<Review> reviews = new HashSet<>();
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @Setter
+  @NotBlank(message = "Product name is required.")
   @Column(nullable = false)
   private String name;
 
@@ -45,20 +47,24 @@ public class Product {
   private String description;
 
   @Setter
-  @DecimalMin(value = "0.01", message = "Price must be greater than or equal to 0.01")
-  @DecimalMax(value = "999999.99", message = "Price must be less than 1'000'000")
+  @DecimalMin(value = "0.01", message = "Price must be greater than or equal to 0.01.")
+  @DecimalMax(value = "999999.99", message = "Price must be less than 1'000'000.")
+  @NotNull(message = "Product price is required.")
   @Column(precision = 8, scale = 2, nullable = false)
   private BigDecimal price;
 
   @Setter
+  @PositiveOrZero(message = "Stock quantity cannot be negative.")
   @Column(nullable = false)
   private int stockQuantity;
 
   @Setter
+  @PositiveOrZero(message = "Average rating cannot be negative.")
   @Column(precision = 3, scale = 2)
   private BigDecimal averageRating = BigDecimal.ZERO;
 
   @Setter
+  @PositiveOrZero(message = "Review count cannot be negative.")
   @Column
   private Integer reviewCount = 0;
 

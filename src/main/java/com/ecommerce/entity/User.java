@@ -44,35 +44,35 @@ public class User {
 
   @Setter
   @Column(length = 50)
-  @Size(max = 50)
+  @Size(max = 50, message = "First name cannot be longer than 50 characters.")
   private String firstName;
 
   @Setter
   @Column(length = 50)
-  @Size(max = 50)
+  @Size(max = 50, message = "Last name cannot be longer than 50 characters.")
   private String lastName;
 
   @Setter
   @Column(length = 15)
-  @Size(max = 15)
+  @Size(max = 15, message = "Phone number cannot be longer than 15 characters.")
   private String phoneNumber;
 
   @Setter
   @Column(unique = true, nullable = false)
   @NotBlank(message = "Username is required")
-  @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+  @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters.")
   private String username;
 
   @Setter
   @Column(nullable = false)
   @NotBlank(message = "Password is required")
-  @Size(min = 8, message = "Password must be at least 8 characters long")
+  @Size(min = 8, message = "Password must be at least 8 characters long.")
   private String password;
 
   @Setter
   @Column(nullable = false, unique = true)
   @NotBlank(message = "Email is required")
-  @Email(message = "Please provide a valid email address")
+  @Email(message = "Please provide a valid email address.")
   private String email;
 
   @Setter
