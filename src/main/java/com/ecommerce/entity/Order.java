@@ -19,16 +19,19 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  @NotEmpty
+  @NotEmpty(message = "Order must contain at least one item.")
   private final List<OrderItem> orderItems = new ArrayList<>();
+
   @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", updatable = false)
+  @NotNull(message = "Order must be associated with a user.")
   private User user;
+
   @Setter
   @OneToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "shipping_details_id", referencedColumnName = "id", nullable = false)
-  @NotNull
+  @NotNull(message = "Shipping details are required.")
   private ShippingDetails shippingDetails;
 
   @Id
@@ -37,18 +40,19 @@ public class Order {
 
   @Setter
   @Column(nullable = false, updatable = false)
-  @NotNull
+  @NotNull(message = "Order date is required.")
   private Instant orderDate;
 
   @Setter
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
-  @NotNull
+  @NotNull(message = "Order status is required.")
   private Status status;
 
   @Setter
-  @Column(nullable = false, precision = 38, scale = 2)
-  @NotNull @PositiveOrZero
+  @NotNull(message = "Total amount is required for an order.")
+  @PositiveOrZero(message = "Total amount cannot be negative.")
+  @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal totalAmount;
 
   public void addOrderItems(List<OrderItem> items) {

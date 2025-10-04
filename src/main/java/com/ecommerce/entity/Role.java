@@ -17,7 +17,7 @@ public class Role {
 
   @Setter
   @Column(nullable = false, unique = true)
-  @NotBlank
+  @NotBlank(message = "Role name is required.")
   private String name;
 
   public Role(String name) {

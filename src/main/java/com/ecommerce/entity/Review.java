@@ -29,24 +29,25 @@ public class Review {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "product_id", nullable = false)
+  @NotNull(message = "Review must be associated with a product.")
   @Setter
-  @NotNull
   private Product product;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "user_id", nullable = false)
+  @NotNull(message = "Review must be associated with a user.")
   @Setter
-  @NotNull
   private User user;
 
   @Column(nullable = false)
-  @Min(1)
-  @Max(5)
+  @Min(value = 1, message = "Rating must be at least 1.")
+  @Max(value = 5, message = "Rating must be at most 5.")
+  @NotNull(message = "A rating is required.")
   @Setter
   private Integer rating;
 
   @Column(columnDefinition = "TEXT")
-  @Setter
   @Size(max = 1000, message = "Comment cannot exceed 1000 characters.")
+  @Setter
   private String comment;
 }

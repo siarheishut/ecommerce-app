@@ -1,6 +1,7 @@
 package com.ecommerce.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class Category {
 
   @Setter
   @Column(nullable = false, unique = true)
+  @NotBlank(message = "Category name is required.")
   private String name;
 
   @Setter
