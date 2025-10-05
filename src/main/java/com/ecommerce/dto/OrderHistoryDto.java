@@ -14,12 +14,25 @@ public record OrderHistoryDto(
     BigDecimal totalAmount,
     List<OrderHistoryItemDto> items
 ) {
+
+  // Constructor for JPQL projections.
+  public OrderHistoryDto(Long orderId, Instant orderDate, Order.Status status,
+                         BigDecimal totalAmount) {
+    this(orderId, orderDate, status, totalAmount, null);
+  }
+
+  /**
+   * It is kept for potential future use cases where a
+   * fully loaded entity is available and needs conversion.
+   */
+  @Deprecated(forRemoval = false)
   public static OrderHistoryDto fromEntity(Order order) {
     if (order == null) {
       return null;
     }
     List<OrderHistoryItemDto> itemDtos = order.getOrderItems().stream()
         .map(item -> new OrderHistoryItemDto(
+            order.getId(),
             item.getProductName(),
             item.getProductDescription(),
             item.getQuantity(),

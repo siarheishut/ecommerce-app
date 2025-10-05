@@ -2,10 +2,7 @@ package com.ecommerce.service;
 
 import com.ecommerce.cart.CartSessionItem;
 import com.ecommerce.cart.ShoppingCart;
-import com.ecommerce.dto.OrderDto;
-import com.ecommerce.dto.OrderHistoryDto;
-import com.ecommerce.dto.OrderItemDto;
-import com.ecommerce.dto.ShippingDetailsDto;
+import com.ecommerce.dto.*;
 import com.ecommerce.entity.*;
 import com.ecommerce.exception.EmptyCartOrderException;
 import com.ecommerce.exception.InsufficientStockException;
@@ -157,10 +154,19 @@ public class OrderServiceImpl implements OrderService {
     if (currentUser == null) {
       return Collections.emptyList();
     }
-    List<Order> orders = orderRepository.findByUserOrderByOrderDateDesc(currentUser);
+    List<OrderHistoryDto> orders = orderRepository.findOrderHistoryByUser(currentUser);
+    if (orders.isEmpty()) {
+      return Collections.emptyList();
+    }
 
-    return orders.stream()
-        .map(OrderHistoryDto::fromEntity)
-        .collect(Collectors.toList());
+    List<Long> orderIds = orders.stream().map(OrderHistoryDto::orderId).toList();
+    Map<Long, List<OrderHistoryItemDto>> itemsByOrderId =
+        orderRepository.findOrderHistoryItemsByOrderIds(orderIds).stream()
+            .collect(Collectors.groupingBy(OrderHistoryItemDto::orderId));
+
+    return orders.stream().map(order -> new OrderHistoryDto(
+        order.orderId(), order.orderDate(), order.status(), order.totalAmount(),
+        itemsByOrderId.getOrDefault(order.orderId(), Collections.emptyList())
+    )).collect(Collectors.toList());
   }
 }

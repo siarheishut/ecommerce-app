@@ -10,7 +10,6 @@ import com.ecommerce.entity.Order;
 import com.ecommerce.entity.Product;
 import com.ecommerce.entity.User;
 import com.ecommerce.exception.EmptyCartOrderException;
-import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.repository.OrderRepository;
 import com.ecommerce.repository.ProductRepository;
@@ -25,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -219,6 +217,6 @@ public class OrderServiceImplTest {
         List<OrderHistoryDto> history = orderService.getOrderHistoryForCurrentUser();
 
         assertThat(history).isEmpty();
-        verify(orderRepository, never()).findByUserOrderByOrderDateDesc(any());
+        verify(orderRepository, never()).findOrderHistoryByUser(any());
     }
 }
