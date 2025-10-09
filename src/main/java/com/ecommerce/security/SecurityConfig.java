@@ -24,10 +24,12 @@ public class SecurityConfig {
     http
         .authorizeHttpRequests(configurer ->
             configurer
-                .requestMatchers("/api/auth/**", "/cart/**", "/", "/products/list",
+                .requestMatchers(
+                    "/api/auth/**", "/cart/**", "/", "/products/list", "/products/**",
                     "/login", "/logout", "/register", "/processRegistration", "/error",
-                    "/forgot-password", "/reset-password", "/access-denied",
-                    "/orders/shipping-details", "/orders/place-order", "/orders/confirmation").permitAll()
+                    "/forgot-password", "/reset-password", "/access-denied", "/favicon.ico",
+                    "/orders/shipping-details", "/orders/place-order", "/orders/confirmation")
+                .permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         )

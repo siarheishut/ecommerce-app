@@ -4,6 +4,7 @@ import com.ecommerce.dto.ProductAdminView;
 import com.ecommerce.dto.ProductDto;
 import com.ecommerce.entity.Product;
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.exception.RestoringActiveResourceException;
 import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.repository.ProductSpecification;
@@ -14,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,8 +51,15 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
+  @Transactional
   public void deleteById(Long id) {
-    productRepository.deleteById(id);
+    Product product = productRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found."));
+
+    String originalName = product.getBaseName();
+    product.setName(originalName + "_deleted_" + Instant.now().toString());
+    product.setDeleted(true);
+    productRepository.save(product);
   }
 
   @Override
@@ -66,7 +75,19 @@ public class ProductServiceImpl implements ProductService {
   @Override
   @Transactional
   public void restoreById(Long id) {
-    productRepository.restoreById(id);
+    Product productToRestore = productRepository.findByIdWithDeleted(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found."));
+
+    String originalName = productToRestore.getBaseName();
+
+    if (originalName.equals(productToRestore.getName())) {
+      throw new RestoringActiveResourceException(
+          "Cannot restore an active product with ID " + id + ".");
+    }
+
+    productToRestore.setName(originalName);
+    productToRestore.setDeleted(false);
+    productRepository.save(productToRestore);
   }
 
   @Override

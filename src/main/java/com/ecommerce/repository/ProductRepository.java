@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
   @Query(value = "SELECT p.id, p.name, p.description, p.price, p.stock_quantity AS stockQuantity, " +
@@ -23,4 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
   @Modifying
   @Query(value = "UPDATE products SET is_deleted = false WHERE id = :id", nativeQuery = true)
   void restoreById(Long id);
+
+  @Query(value = "SELECT * FROM products WHERE id = :id", nativeQuery = true)
+  Optional<Product> findByIdWithDeleted(Long id);
 }

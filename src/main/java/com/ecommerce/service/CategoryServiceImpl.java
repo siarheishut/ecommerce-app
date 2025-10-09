@@ -4,6 +4,7 @@ import com.ecommerce.dto.CategoryDto;
 import com.ecommerce.entity.Category;
 import com.ecommerce.exception.CategoryInUseException;
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.exception.RestoringActiveResourceException;
 import com.ecommerce.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -37,20 +38,19 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   @Transactional
   public void save(CategoryDto categoryDto) {
-    Category category;
-    String categoryName = categoryDto.getName();
+    final String categoryName = categoryDto.getName();
 
     Optional<Category> existingActiveCategory = categoryRepository.findByNameIgnoreCase(categoryName);
-
-    if (categoryDto.getId() == null) {
-      if (existingActiveCategory.isPresent()) {
+    if (existingActiveCategory.isPresent()) {
+      if (categoryDto.getId() == null || !existingActiveCategory.get().getId().equals(categoryDto.getId())) {
         throw new DataIntegrityViolationException("A category with this name already exists.");
       }
+    }
+
+    Category category;
+    if (categoryDto.getId() == null) {
       category = new Category(categoryName);
     } else {
-      if (existingActiveCategory.isPresent() && !existingActiveCategory.get().getId().equals(categoryDto.getId())) {
-        throw new DataIntegrityViolationException("A category with this name already exists.");
-      }
       category = categoryRepository.findById(categoryDto.getId())
           .orElseThrow(() -> new ResourceNotFoundException(
               "Category with ID " + categoryDto.getId() + " not found."));
@@ -83,6 +83,10 @@ public class CategoryServiceImpl implements CategoryService {
         .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + id + " not found."));
 
     String originalName = categoryToRestore.getBaseName();
+
+    if (categoryToRestore.getBaseName().equals(categoryToRestore.getName())) {
+      throw new RestoringActiveResourceException("Cannot restore an active category with ID " + id + ".");
+    }
 
     if (categoryRepository.findByNameIgnoreCase(originalName).isPresent()) {
       throw new DataIntegrityViolationException("An active category with the name '" + originalName + "' already exists.");

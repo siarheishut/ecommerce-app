@@ -104,4 +104,11 @@ public class Product {
       this.reviewCount = this.reviews.size();
     }
   }
+
+  public String getBaseName() {
+    if (this.name != null && this.name.contains("_deleted_")) {
+      return this.name.substring(0, this.name.lastIndexOf("_deleted_"));
+    }
+    return this.name;
+  }
 }

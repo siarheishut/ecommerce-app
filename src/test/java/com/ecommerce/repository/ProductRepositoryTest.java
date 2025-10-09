@@ -72,6 +72,37 @@ class ProductRepositoryTest {
   }
 
   @Test
+  void whenFindByIdWithDeleted_withActiveProduct_returnsOptionalOfProduct() {
+    Product product = new Product();
+    product.setName("Active Product");
+    product.setStockQuantity(10);
+    product.setPrice(BigDecimal.TEN);
+    Product savedProduct = entityManager.persistAndFlush(product);
+
+    Optional<Product> foundProduct = productRepository.findByIdWithDeleted(savedProduct.getId());
+
+    assertThat(foundProduct).isPresent();
+    assertThat(foundProduct.get().getId()).isEqualTo(savedProduct.getId());
+    assertThat(foundProduct.get().isDeleted()).isFalse();
+  }
+
+  @Test
+  void whenFindByIdWithDeleted_withSoftDeletedProduct_returnsOptionalOfProduct() {
+    Product product = new Product();
+    product.setName("Deleted Product");
+    product.setStockQuantity(10);
+    product.setPrice(BigDecimal.TEN);
+    Product savedProduct = entityManager.persistAndFlush(product);
+    productRepository.deleteById(savedProduct.getId());
+
+    Optional<Product> foundProduct = productRepository.findByIdWithDeleted(savedProduct.getId());
+
+    assertThat(foundProduct).isPresent();
+    assertThat(foundProduct.get().getId()).isEqualTo(savedProduct.getId());
+    assertThat(foundProduct.get().isDeleted()).isTrue();
+  }
+
+  @Test
   void whenFindAllForAdminView_withMixedProducts_returnsCorrectDtoList() {
     Category electronics = new Category("Electronics");
     Category books = new Category("Books");

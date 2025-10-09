@@ -2,18 +2,20 @@ package com.ecommerce.service;
 
 import com.ecommerce.cart.CartSessionItem;
 import com.ecommerce.cart.ShoppingCart;
-import com.ecommerce.dto.*;
+import com.ecommerce.dto.OrderHistoryDto;
+import com.ecommerce.dto.OrderHistoryItemDto;
+import com.ecommerce.dto.ShippingDetailsDto;
 import com.ecommerce.entity.*;
 import com.ecommerce.exception.EmptyCartOrderException;
 import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.exception.UserNotAuthenticatedException;
 import com.ecommerce.repository.OrderRepository;
 import com.ecommerce.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
@@ -48,63 +50,15 @@ public class OrderServiceImpl implements OrderService {
 
   @Override
   @Transactional
-  public Order placeOrder(String username, OrderDto orderDto) {
-    User user = userService.findByUsername(username)
-        .orElseThrow(() -> new ResourceNotFoundException(
-            "User with username " + username + " not found."));
-
-    Order order = new Order();
-    order.setUser(user);
-    order.setOrderDate(Instant.now());
-    order.setStatus(Order.Status.PENDING);
-
-    List<OrderItem> orderItems = new ArrayList<>();
-    BigDecimal totalAmount = BigDecimal.ZERO;
-
-    List<Long> productIds = new ArrayList<>(orderDto.orderItemsList()
-        .stream().map(OrderItemDto::getProductId).toList());
-    List<Product> productsToUpdate = new ArrayList<>();
-    Map<Long, Product> productMap = productRepository.findAllById(productIds)
-        .stream().collect(Collectors.toMap(Product::getId, Function.identity()));
-
-    for (OrderItemDto orderItemDto : orderDto.orderItemsList()) {
-      Product product = productMap.get(orderItemDto.getProductId());
-      if (product == null) {
-        throw new ResourceNotFoundException("Product with ID " + orderItemDto.getProductId() +
-            " not found.");
-      }
-      if (orderItemDto.getQuantity() > product.getStockQuantity()) {
-        throw new InsufficientStockException("Not enough stock for product: " + product.getName() +
-            ".Available: " + product.getStockQuantity() + ".");
-      }
-
-      OrderItem orderItem = new OrderItem(order, product, orderItemDto.getQuantity());
-      orderItems.add(orderItem);
-      totalAmount = totalAmount.add(BigDecimal.valueOf(orderItemDto.getQuantity())
-          .multiply(product.getPrice()));
-
-      product.setStockQuantity(product.getStockQuantity() - orderItemDto.getQuantity());
-      productsToUpdate.add(product);
-    }
-
-    order.addOrderItems(orderItems);
-    order.setTotalAmount(totalAmount);
-    productRepository.saveAll(productsToUpdate);
-    return orderRepository.save(order);
-  }
-
-  @Override
-  @Transactional
   public void placeOrder(ShippingDetailsDto shippingDetailsDto) {
     if (shoppingCart.getItems().isEmpty()) {
       throw new EmptyCartOrderException("Cannot create order from an empty cart.");
     }
 
-    User currentUser = userService.getCurrentUser();
-
     Order order = new Order();
-    if (currentUser != null) {
-      order.setUser(currentUser);
+    try {
+      order.setUser(userService.getCurrentUser());
+    } catch (UserNotAuthenticatedException _) {
     }
 
     ShippingDetails shippingDetails = getShippingDetails(shippingDetailsDto);

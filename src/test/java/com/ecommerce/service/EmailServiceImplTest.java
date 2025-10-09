@@ -35,7 +35,7 @@ public class EmailServiceImplTest {
   }
 
   @Test
-  void whenSendOrderConfirmationEmail_thenMailIsSentWithCorrectDetails() {
+  void whenSendOrderConfirmationEmail_mailIsSentWithCorrectDetails() {
     ShippingDetails shippingDetails = mock(ShippingDetails.class);
     when(shippingDetails.getEmail()).thenReturn("customer@gmail.com");
     when(shippingDetails.getFirstName()).thenReturn("Tom");
@@ -63,7 +63,7 @@ public class EmailServiceImplTest {
   }
 
   @Test
-  void whenSendPasswordResetEmail_thenMailIsSentWithCorrectLink() {
+  void whenSendPasswordResetEmail_mailIsSentWithCorrectLink() {
     User user = mock(User.class);
     when(user.getEmail()).thenReturn("customer@gmail.com");
     String token = "secure-reset-token";

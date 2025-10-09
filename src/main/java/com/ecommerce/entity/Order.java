@@ -25,7 +25,6 @@ public class Order {
   @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", updatable = false)
-  @NotNull(message = "Order must be associated with a user.")
   private User user;
 
   @Setter
