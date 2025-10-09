@@ -2,7 +2,6 @@ package com.ecommerce.controller.web;
 
 import com.ecommerce.dto.OrderHistoryDto;
 import com.ecommerce.dto.ShippingDetailsDto;
-import com.ecommerce.entity.Address;
 import com.ecommerce.entity.User;
 import com.ecommerce.service.AddressService;
 import com.ecommerce.service.CartService;
@@ -10,6 +9,9 @@ import com.ecommerce.service.OrderService;
 import com.ecommerce.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,9 +21,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Collections;
 import java.util.List;
 
 @Controller
+@Slf4j
 @RequestMapping("/orders")
 @RequiredArgsConstructor
 public class OrderUIController {
@@ -46,17 +50,27 @@ public class OrderUIController {
 
   @GetMapping("/confirmation")
   public String orderConfirmation() {
+    log.info("Displaying order confirmation page.");
     return "public/order-confirmation";
   }
 
   @GetMapping("/shipping-details")
   public String shippingDetailsForm(Model model) {
     if (cartService.getCartForCurrentUser().items().isEmpty()) {
+      log.warn("User attempted to access shipping details with an empty cart. Redirecting to " +
+          "cart.");
       return "redirect:/cart";
     }
-    setUserInfo(model);
-    List<Address> addresses = addressService.getAddressesForCurrentUser();
-    model.addAttribute("addresses", addresses);
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.isAuthenticated() &&
+        !(authentication.getPrincipal() instanceof String)) {
+      setUserInfo(model);
+      model.addAttribute("addresses", addressService.getAddressesForCurrentUser());
+    } else {
+      model.addAttribute("shippingDetails", new ShippingDetailsDto());
+      model.addAttribute("addresses", Collections.emptyList());
+    }
     return "public/shipping-details";
   }
 
@@ -66,12 +80,14 @@ public class OrderUIController {
                            BindingResult bindingResult,
                            RedirectAttributes redirectAttributes) {
     if (bindingResult.hasErrors()) {
+      log.warn("Shipping details validation failed. Redirecting back to form.");
       redirectAttributes.addFlashAttribute("shippingDetails", shippingDetailsDto);
       redirectAttributes.addFlashAttribute(
-              BindingResult.MODEL_KEY_PREFIX + "shippingDetails", bindingResult);
+          BindingResult.MODEL_KEY_PREFIX + "shippingDetails", bindingResult);
       return "redirect:/orders/shipping-details";
     }
     orderService.placeOrder(shippingDetailsDto);
+    log.info("Order placed successfully. Redirecting to confirmation page.");
     return "redirect:/orders/confirmation";
   }
 
@@ -79,6 +95,7 @@ public class OrderUIController {
   public String orderHistory(Model model) {
     List<OrderHistoryDto> orderHistory = orderService.getOrderHistoryForCurrentUser();
     model.addAttribute("orders", orderHistory);
+    log.info("Displaying order history for current user. Found {} orders.", orderHistory.size());
     return "public/order-history";
   }
 }

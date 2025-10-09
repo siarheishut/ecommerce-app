@@ -1,10 +1,11 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dto.ProductDto;
 import com.ecommerce.dto.ProductAdminView;
+import com.ecommerce.dto.ProductDto;
 import com.ecommerce.entity.Category;
 import com.ecommerce.entity.Product;
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.exception.RestoringActiveResourceException;
 import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
@@ -23,11 +24,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class ProductServiceImplTest {
 
   @Mock
@@ -132,7 +134,7 @@ class ProductServiceImplTest {
   }
 
   @Test
-  public void whenSearchProducts_withCategoryFilter_thenReturnFilteredPage() {
+  public void whenSearchProducts_withCategoryFilter_returnFilteredPage() {
     List<Long> categoryIds = List.of(1L);
     PageRequest pageable = PageRequest.of(0, 10);
 
@@ -152,7 +154,7 @@ class ProductServiceImplTest {
   }
 
   @Test
-  public void whenSearchProducts_withPriceRangeFilter_thenReturnFilteredPage() {
+  public void whenSearchProducts_withPriceRangeFilter_returnFilteredPage() {
     Double minPrice = 100.0;
     Double maxPrice = 200.0;
     PageRequest pageable = PageRequest.of(0, 10);
@@ -174,7 +176,7 @@ class ProductServiceImplTest {
   }
 
   @Test
-  public void whenSearchProducts_withAvailabilityFilter_thenReturnFilteredPage() {
+  public void whenSearchProducts_withAvailabilityFilter_returnFilteredPage() {
     Boolean onlyAvailable = true;
     PageRequest pageable = PageRequest.of(0, 10);
 
@@ -259,10 +261,27 @@ class ProductServiceImplTest {
   }
 
   @Test
-  public void whenDeleteById_deleteSuccessfully() {
-    Long productId = 1L;
-    productService.deleteById(productId);
-    verify(productRepository).deleteById(productId);
+  public void whenDeleteById_withValidId_deleteSuccessfully() {
+    Product product = new Product();
+    product.setName("Test Product");
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+    ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+    productService.deleteById(1L);
+
+    verify(productRepository).save(productCaptor.capture());
+    assertThat(productCaptor.getValue().isDeleted()).isTrue();
+    assertThat(productCaptor.getValue().getName()).startsWith("Test Product_deleted_");
+  }
+
+  @Test
+  public void whenDeleteById_withNonExistingId_throwsResourceNotFoundException() {
+    when(productRepository.findById(1L)).thenReturn(Optional.empty());
+    ResourceNotFoundException exception = assertThrows(
+        ResourceNotFoundException.class,
+        () -> productService.deleteById(1L)
+    );
+    verify(productRepository, never()).deleteById(anyLong());
   }
 
   @Test
@@ -278,7 +297,7 @@ class ProductServiceImplTest {
   }
 
   @Test
-  public void whenFindAllForAdminList_RepositoryMethodIsCalled() {
+  public void whenFindAllForAdminList_findSuccessfully() {
     List<ProductAdminView> expectedList = List.of(mock(ProductAdminView.class));
     when(productRepository.findAllForAdminView()).thenReturn(expectedList);
 
@@ -289,9 +308,44 @@ class ProductServiceImplTest {
   }
 
   @Test
-  public void whenRestoreById_RepositoryMethodIsCalled() {
-    Long productId = 1L;
-    productService.restoreById(productId);
-    verify(productRepository).restoreById(productId);
+  public void whenRestoreById_WithValidId_restoreSuccessfully() {
+    Product deletedProduct = new Product();
+    deletedProduct.setDeleted(true);
+    deletedProduct.setName("Test_deleted_123");
+    when(productRepository.findByIdWithDeleted(1L)).thenReturn(Optional.of(deletedProduct));
+
+    ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+    productService.restoreById(1L);
+
+    verify(productRepository).save(productCaptor.capture());
+    assertThat(productCaptor.getValue().isDeleted()).isFalse();
+    assertThat(productCaptor.getValue().getName()).isEqualTo("Test");
+  }
+
+  @Test
+  public void whenRestoreById_WithNonExistingId_throwsResourceNotFoundException() {
+    Product deletedProduct = new Product();
+    deletedProduct.setDeleted(true);
+    deletedProduct.setName("Test_deleted_123");
+    when(productRepository.findByIdWithDeleted(1L)).thenReturn(Optional.empty());
+    ResourceNotFoundException exception = assertThrows(
+        ResourceNotFoundException.class,
+        () -> productService.restoreById(1L)
+    );
+    verify(productRepository, never()).save(any(Product.class));
+  }
+
+  @Test
+  void whenRestoreById_withActiveProduct_throwsRestoringActiveResourceException() {
+    Product activeProduct = new Product();
+    activeProduct.setName("Active Product");
+    when(productRepository.findByIdWithDeleted(1L)).thenReturn(Optional.of(activeProduct));
+
+    RestoringActiveResourceException exception = assertThrows(
+        RestoringActiveResourceException.class,
+        () -> productService.restoreById(1L)
+    );
+
+    assertThat(exception.getMessage()).isEqualTo("Cannot restore an active product with ID 1.");
   }
 }

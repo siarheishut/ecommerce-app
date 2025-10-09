@@ -6,13 +6,15 @@ import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.service.CategoryService;
 import com.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Optional;
 
 @Slf4j
 @Controller
@@ -31,28 +33,41 @@ public class AdminProductController {
   public String showAddForm(Model model) {
     model.addAttribute("product", new ProductDto());
     model.addAttribute("allCategories", categoryService.findAllSortedByName());
-    return "/admin/product-form";
+    return "admin/product-form";
   }
 
   @GetMapping("/edit/{id}")
-  public String showUpdateForm(@PathVariable Long id, Model model) {
-    Product product = productService.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-    model.addAttribute("product", ProductDto.fromEntity(product));
+  public String showUpdateForm(@PathVariable Long id, Model model,
+                               RedirectAttributes redirectAttributes) {
+    Optional<Product> product = productService.findById(id);
+    if (product.isEmpty()) {
+      redirectAttributes.addFlashAttribute("errorMessage", "Product not found with id: " + id);
+      return "redirect:/admin/products/list";
+    }
+
+    model.addAttribute("product", ProductDto.fromEntity(product.get()));
     model.addAttribute("allCategories", categoryService.findAllSortedByName());
-    return "/admin/product-form";
+    return "admin/product-form";
   }
 
   @PostMapping("/save")
   public String saveProduct(
       @Valid @ModelAttribute("product") ProductDto productDto,
       BindingResult bindingResult,
-      Model model) {
+      Model model, RedirectAttributes redirectAttributes) {
     if (bindingResult.hasErrors()) {
+      log.warn("Admin product form has validation errors.");
       model.addAttribute("allCategories", categoryService.findAllSortedByName());
-      return "/admin/product-form";
+      return "admin/product-form";
     }
-    productService.save(productDto);
+    try {
+      productService.save(productDto);
+      log.info("Admin saved product with id: {}", productDto.getId());
+      redirectAttributes.addFlashAttribute("successMessage", "Product saved successfully.");
+    } catch (ResourceNotFoundException e) {
+      log.warn("Attempted to save a non-existent product with id: {}", productDto.getId(), e);
+      redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+    }
     return "redirect:/admin/products/list";
   }
 
@@ -66,10 +81,15 @@ public class AdminProductController {
   public String deleteProducts(@PathVariable Long id, RedirectAttributes redirectAttributes) {
     try {
       productService.deleteById(id);
+      log.info("Admin deleted product with id: {}", id);
       redirectAttributes.addFlashAttribute("successMessage", "Product deleted successfully.");
+    } catch (ResourceNotFoundException e) {
+      log.warn("Attempted to delete a non-existent product with id: {}", id, e);
+      redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
     } catch (Exception e) {
       log.error("Error deleting product with id: {}", id, e);
-      redirectAttributes.addFlashAttribute("errorMessage", "An error occurred while deleting the product.");
+      redirectAttributes.addFlashAttribute(
+          "errorMessage", "An error occurred while deleting the product.");
     }
     return "redirect:/admin/products/list";
   }
@@ -78,10 +98,15 @@ public class AdminProductController {
   public String restoreProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
     try {
       productService.restoreById(id);
+      log.info("Admin restored product with id: {}", id);
       redirectAttributes.addFlashAttribute("successMessage", "Product restored successfully.");
+    } catch (ResourceNotFoundException e) {
+      log.warn("Attempted to restore a non-existent product with id: {}", id, e);
+      redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
     } catch (Exception e) {
       log.error("Error restoring product with id: {}", id, e);
-      redirectAttributes.addFlashAttribute("errorMessage", "An error occurred while restoring the product.");
+      redirectAttributes.addFlashAttribute(
+          "errorMessage", "An error occurred while restoring the product.");
     }
     return "redirect:/admin/products/list";
   }

@@ -211,7 +211,7 @@ public class UserServiceImplTest {
   }
 
   @Test
-  public void whenCreatePasswordResetToken_thenSavesTokenAndTriggersEmail() {
+  public void whenCreatePasswordResetToken_savesTokenAndTriggersEmail() {
     User user = new User();
     user.setEmail("test@example.com");
 

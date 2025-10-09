@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -69,7 +69,10 @@ public class ReviewRepositoryTest {
     review1.setRating(3);
     entityManager.persist(review1);
 
-    try { Thread.sleep(10); } catch (InterruptedException _) { }
+    try {
+      Thread.sleep(10);
+    } catch (InterruptedException _) {
+    }
 
     Review review2 = new Review();
     review2.setUser(user2);
