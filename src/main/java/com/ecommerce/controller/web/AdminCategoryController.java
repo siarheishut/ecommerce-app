@@ -75,8 +75,17 @@ public class AdminCategoryController {
   }
 
   @GetMapping("/list")
-  public String listCategories(Model model) {
-    List<Category> categories = categoryService.findAllForAdmin();
+  public String listCategories(@RequestParam(value = "keyword", required = false) String keyword,
+                               @RequestParam(value = "status", defaultValue = "all") String status,
+                               Model model) {
+    List<Category> categories;
+    if (keyword != null && !keyword.trim().isEmpty()) {
+      categories = categoryService.searchByNameForAdmin(keyword, status);
+      model.addAttribute("keyword", keyword);
+    } else {
+      categories = categoryService.findAllForAdmin(status);
+    }
+    model.addAttribute("status", status);
     model.addAttribute("categories", categories);
     return "admin/categories-list";
   }

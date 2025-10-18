@@ -1,5 +1,6 @@
 package com.ecommerce.controller.web;
 
+import com.ecommerce.dto.ProductAdminView;
 import com.ecommerce.dto.ProductDto;
 import com.ecommerce.entity.Product;
 import com.ecommerce.exception.ResourceNotFoundException;
@@ -14,6 +15,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -72,8 +75,27 @@ public class AdminProductController {
   }
 
   @GetMapping("/list")
-  public String listProducts(Model model) {
-    model.addAttribute("products", productService.findAllForAdminList());
+  public String listProducts(
+      @RequestParam(value = "keyword", required = false) String keyword,
+      @RequestParam(value = "categoryIds", required = false) List<Long> categoryIds,
+      @RequestParam(value = "status", defaultValue = "all") String status,
+      Model model) {
+
+    List<ProductAdminView> products;
+    boolean isSearch = keyword != null || categoryIds != null;
+
+    if (isSearch || !"all".equals(status)) {
+      products = productService.searchForAdminList(keyword, categoryIds, status);
+    } else {
+      products = productService.findAllForAdminList();
+    }
+
+    model.addAttribute("products", products);
+    model.addAttribute("allCategories", categoryService.findAllSortedByName());
+    model.addAttribute("keyword", keyword);
+    model.addAttribute("selectedCategoryIds",
+        categoryIds != null ? categoryIds : Collections.emptyList());
+    model.addAttribute("status", status);
     return "admin/products-list";
   }
 

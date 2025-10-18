@@ -10,16 +10,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductService {
-    void save(ProductDto productDto);
+  void save(ProductDto productDto);
 
-    void deleteById(Long id);
+  void deleteById(Long id);
 
-    Optional<Product> findById(Long id);
+  Optional<Product> findById(Long id);
 
-    Page<Product> searchProducts(String name, List<Long> categoryIds,
-                                 Double minPrice, Double maxPrice, Boolean onlyAvailable, Pageable pageable);
+  Page<Product> searchProducts(String name, List<Long> categoryIds,
+                               Double minPrice, Double maxPrice, Boolean onlyAvailable, Pageable pageable);
 
-    List<ProductAdminView> findAllForAdminList();
+  List<ProductAdminView> findAllForAdminList();
 
-    void restoreById(Long id);
+  List<ProductAdminView> searchForAdminList(String keyword, List<Long> categoryIds, String status);
+
+  void restoreById(Long id);
 }

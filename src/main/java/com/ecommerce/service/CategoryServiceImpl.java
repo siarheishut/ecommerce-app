@@ -21,13 +21,20 @@ public class CategoryServiceImpl implements CategoryService {
   private final CategoryRepository categoryRepository;
 
   @Override
-  public List<Category> findAllForAdmin() {
-    return categoryRepository.findAllWithDeleted();
+  public List<Category> findAllForAdmin(String status) {
+    boolean isDeleted = !"active".equals(status);
+    return categoryRepository.findAllWithDeleted(status, isDeleted);
   }
 
   @Override
   public List<Category> findAllSortedByName() {
     return categoryRepository.findAllByOrderByNameAsc();
+  }
+
+  @Override
+  public List<Category> searchByNameForAdmin(String keyword, String status) {
+    boolean isDeleted = !"active".equals(status);
+    return categoryRepository.searchByNameForAdmin(keyword, status, isDeleted);
   }
 
   @Override

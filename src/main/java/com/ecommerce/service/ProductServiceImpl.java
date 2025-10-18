@@ -73,6 +73,16 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
+  public List<ProductAdminView> searchForAdminList(String keyword, List<Long> categoryIds,
+                                                   String status) {
+    boolean isDeleted = !"active".equals(status);
+    keyword = keyword == null ? "" : keyword;
+    int categoryCount = categoryIds == null ? 0 : categoryIds.size();
+    return productRepository.searchForAdminView(keyword, categoryIds, categoryCount, status,
+        isDeleted);
+  }
+
+  @Override
   @Transactional
   public void restoreById(Long id) {
     Product productToRestore = productRepository.findByIdWithDeleted(id)

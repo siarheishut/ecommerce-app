@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface CategoryService {
   List<Category> findAllSortedByName();
 
+  List<Category> searchByNameForAdmin(String keyword, String status);
+
   Optional<Category> findById(Long id);
 
   void save(CategoryDto categoryDto);
@@ -17,5 +19,5 @@ public interface CategoryService {
 
   void restoreById(Long id);
 
-  List<Category> findAllForAdmin();
+  List<Category> findAllForAdmin(String status);
 }

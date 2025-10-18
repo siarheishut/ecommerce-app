@@ -30,17 +30,14 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CartServiceImplTest {
-  @Mock
-  private ProductRepository productRepository;
-
-  @Mock
-  private ShoppingCart shoppingCart;
-
-  @Spy
-  private Lock cartLock = new ReentrantLock();
-
   @InjectMocks
   CartServiceImpl cartService;
+  @Mock
+  private ProductRepository productRepository;
+  @Mock
+  private ShoppingCart shoppingCart;
+  @Spy
+  private Lock cartLock = new ReentrantLock();
 
   @Test
   public void whenAddProductToCart_withNotFoundId_throwResourceNotFoundException() {
@@ -55,7 +52,7 @@ public class CartServiceImplTest {
     verify(shoppingCart, never()).addItem(any(Product.class), eq(2));
     verify(cartLock).lock();
     verify(cartLock).unlock();
-    assertThat(exception.getMessage()).isEqualTo("Product with ID 1 not found");
+    assertThat(exception.getMessage()).isEqualTo("Product with ID 1 not found.");
   }
 
   @Test
@@ -91,7 +88,8 @@ public class CartServiceImplTest {
         () -> cartService.addProductToCart(productId, quantity)
     );
 
-    assertThat(exception.getMessage()).isEqualTo("Not enough stock for Test Product. Available: 4");
+    assertThat(exception.getMessage())
+        .isEqualTo("Not enough stock for Test Product. Available: 4.");
     verify(shoppingCart, never()).addItem(any(), anyInt());
     verify(cartLock).lock();
     verify(cartLock).unlock();

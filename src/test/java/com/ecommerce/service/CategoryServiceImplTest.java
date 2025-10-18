@@ -32,15 +32,39 @@ public class CategoryServiceImplTest {
   private CategoryServiceImpl categoryService;
 
   @Test
-  void whenFindAllForAdmin_findSuccessfully() {
+  void whenFindAllForAdmin_withStatusAll_findsSuccessfully() {
     List<Category> expectedCategories =
         List.of(new Category("Furniture"), new Category("Toys"));
-    when(categoryRepository.findAllWithDeleted()).thenReturn(expectedCategories);
+    when(categoryRepository.findAllWithDeleted("all", true)).thenReturn(expectedCategories);
 
-    List<Category> actualCategories = categoryService.findAllForAdmin();
+    List<Category> actualCategories = categoryService.findAllForAdmin("all");
 
     assertThat(actualCategories).isEqualTo(expectedCategories);
-    verify(categoryRepository).findAllWithDeleted();
+    verify(categoryRepository).findAllWithDeleted("all", true);
+  }
+
+  @Test
+  void whenFindAllForAdmin_withStatusDeleted_findsSuccessfully() {
+    List<Category> expectedCategories = List.of(new Category("Toys"));
+    when(categoryRepository.findAllWithDeleted("deleted", true)).thenReturn(expectedCategories);
+
+    List<Category> actualCategories = categoryService.findAllForAdmin("deleted");
+
+    assertThat(actualCategories).isEqualTo(expectedCategories);
+    verify(categoryRepository).findAllWithDeleted("deleted", true);
+  }
+
+  @Test
+  void whenSearchByNameForAdmin_withKeywordAndStatus_searchesSuccessfully() {
+    String keyword = "Test";
+    String status = "active";
+    List<Category> expectedCategories = List.of(new Category("Test Category"));
+    when(categoryRepository.searchByNameForAdmin(keyword, status, false)).thenReturn(expectedCategories);
+
+    List<Category> actualCategories = categoryService.searchByNameForAdmin(keyword, status);
+
+    assertThat(actualCategories).isEqualTo(expectedCategories);
+    verify(categoryRepository).searchByNameForAdmin(keyword, status, false);
   }
 
   @Test

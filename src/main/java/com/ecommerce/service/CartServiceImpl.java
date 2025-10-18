@@ -36,7 +36,7 @@ public class CartServiceImpl implements CartService {
     try {
       Product product = productRepository.findById(productId)
           .orElseThrow(() -> new ResourceNotFoundException(
-              "Product with ID " + productId + " not found"));
+              "Product with ID " + productId + " not found."));
 
       int currentQuantityInCart = shoppingCart.getItems().stream()
           .filter(item -> item.product().getId().equals(productId))
@@ -45,7 +45,7 @@ public class CartServiceImpl implements CartService {
 
       if (product.getStockQuantity() < currentQuantityInCart + quantity) {
         throw new InsufficientStockException("Not enough stock for " + product.getName() +
-            ". Available: " + product.getStockQuantity());
+            ". Available: " + (product.getStockQuantity() - currentQuantityInCart + "."));
       }
       shoppingCart.addItem(product, quantity);
     } finally {

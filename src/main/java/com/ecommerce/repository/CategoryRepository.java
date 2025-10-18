@@ -12,9 +12,21 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
   Optional<Category> findByNameIgnoreCase(String name);
 
-  @Query(value = "SELECT * FROM categories ORDER BY name ASC", nativeQuery = true)
-  List<Category> findAllWithDeleted();
+  @Query(value = """
+      SELECT * FROM categories c
+      WHERE (:status = 'all' OR c.is_deleted = :is_deleted)
+      ORDER BY c.name ASC
+      """, nativeQuery = true)
+  List<Category> findAllWithDeleted(String status, boolean is_deleted);
 
   @Query(value = "SELECT * FROM categories WHERE id = :id", nativeQuery = true)
   Optional<Category> findByIdWithDeleted(Long id);
+
+  @Query(value = """
+      SELECT * FROM categories c
+      WHERE lower(c.name) LIKE lower(concat('%', :keyword, '%'))
+      AND (:status = 'all' OR c.is_deleted = :is_deleted)
+      ORDER BY c.name ASC
+      """, nativeQuery = true)
+  List<Category> searchByNameForAdmin(String keyword, String status, boolean is_deleted);
 }

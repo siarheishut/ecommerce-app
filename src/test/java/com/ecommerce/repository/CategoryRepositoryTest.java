@@ -55,13 +55,55 @@ public class CategoryRepositoryTest {
   }
 
   @Test
-  void whenFindAllWithDeleted_withActiveAndDeletedCategories_returnsAllCategories() {
+  void whenFindAllWithDeleted_withStatusAll_returnsAllCategories() {
     categoryRepository.deleteById(cat2.getId());
+    entityManager.flush();
+    entityManager.clear();
 
-    List<Category> foundCategories = categoryRepository.findAllWithDeleted();
+    List<Category> foundCategories = categoryRepository.findAllWithDeleted("all", false);
 
     assertThat(foundCategories).hasSize(2);
     assertThat(foundCategories).containsExactlyInAnyOrder(cat1, cat2);
+  }
+
+  @Test
+  void whenFindAllWithDeleted_withStatusActive_returnsOnlyActive() {
+    categoryRepository.deleteById(cat2.getId());
+    entityManager.flush();
+    entityManager.clear();
+
+    List<Category> foundCategories = categoryRepository.findAllWithDeleted("active", false);
+
+    assertThat(foundCategories).hasSize(1);
+    assertThat(foundCategories.getFirst().getName()).isEqualTo("Category_1");
+  }
+
+  @Test
+  void whenFindAllWithDeleted_withStatusDeleted_returnsOnlyDeleted() {
+    categoryRepository.deleteById(cat2.getId());
+    entityManager.flush();
+    entityManager.clear();
+
+    List<Category> foundCategories = categoryRepository.findAllWithDeleted("deleted", true);
+
+    assertThat(foundCategories).hasSize(1);
+    assertThat(foundCategories.getFirst().getName()).isEqualTo("Category_2");
+  }
+
+  @Test
+  void whenSearchByNameForAdmin_withKeywordAndStatusAll_returnsMatchingCategories() {
+    categoryRepository.deleteById(cat2.getId());
+    entityManager.flush();
+    entityManager.clear();
+
+    Category cat3 = new Category("Another_Category_1");
+    entityManager.persist(cat3);
+
+    List<Category> foundCategories = categoryRepository.searchByNameForAdmin("Category", "all", true);
+
+    assertThat(foundCategories).hasSize(3);
+    assertThat(foundCategories).extracting(Category::getBaseName)
+        .containsExactlyInAnyOrder("Category_1", "Category_2", "Another_Category_1");
   }
 
   @Test

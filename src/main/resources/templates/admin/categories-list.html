@@ -20,11 +20,39 @@
         <button aria-label="Close" class="btn-close" data-bs-dismiss="alert"
                 type="button"></button>
     </div>
-    <!-- Add Button -->
-    <div class="mb-4">
-        <a class="btn btn-primary" th:href="@{/admin/categories/add}">
-            <i class="bi bi-plus-circle"></i> Add Category
-        </a>
+
+    <!-- Search and Add Buttons -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="flex-grow-1 me-3" method="get"
+              th:action="@{/admin/categories/list}">
+            <div class="input-group">
+                <select class="form-select" name="status"
+                        style="max-width: 150px;">
+                    <option th:selected="${status == 'all'}"
+                            value="all">All
+                    </option>
+                    <option th:selected="${status == 'active'}"
+                            value="active">Active
+                    </option>
+                    <option th:selected="${status == 'deleted'}"
+                            value="deleted">Deleted
+                    </option>
+                </select>
+                <input class="form-control" name="keyword"
+                       placeholder="Search by name..."
+                       th:value="${keyword}" type="text">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                    Search
+                </button>
+            </div>
+        </form>
+        <div>
+            <a class="btn btn-primary" th:href="@{/admin/categories/add}">
+                <i class="bi bi-plus-circle"></i>
+                Add Category
+            </a>
+        </div>
     </div>
 
     <div class="card">

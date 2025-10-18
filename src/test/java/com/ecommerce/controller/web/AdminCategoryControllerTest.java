@@ -146,13 +146,42 @@ public class AdminCategoryControllerTest {
   }
 
   @Test
-  void whenListCategories_returnsListView() throws Exception {
-    when(categoryService.findAllForAdmin()).thenReturn(List.of(new Category("Test")));
+  void whenListCategories_withNoParams_returnsListViewWithAllCategories() throws Exception {
+    List<Category> categories = List.of(new Category("Test"));
+    when(categoryService.findAllForAdmin("all")).thenReturn(categories);
 
     mockMvc.perform(get("/admin/categories/list"))
         .andExpect(status().isOk())
         .andExpect(view().name("admin/categories-list"))
-        .andExpect(model().attribute("categories", is(List.of(new Category("Test")))));
+        .andExpect(model().attribute("categories", is(categories)))
+        .andExpect(model().attribute("status", is("all")));
+
+    verify(categoryService).findAllForAdmin("all");
+  }
+
+  @Test
+  void whenListCategories_withKeyword_returnsListViewWithSearchResults() throws Exception {
+    List<Category> categories = List.of(new Category("Searched"));
+    when(categoryService.searchByNameForAdmin("key", "all")).thenReturn(categories);
+
+    mockMvc.perform(get("/admin/categories/list").param("keyword", "key"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("admin/categories-list"))
+        .andExpect(model().attribute("categories", is(categories)))
+        .andExpect(model().attribute("keyword", is("key")))
+        .andExpect(model().attribute("status", is("all")));
+
+    verify(categoryService).searchByNameForAdmin("key", "all");
+  }
+
+  @Test
+  void whenListCategories_withStatus_returnsListViewWithFilteredCategories() throws Exception {
+    mockMvc.perform(get("/admin/categories/list").param("status", "deleted"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("admin/categories-list"))
+        .andExpect(model().attribute("status", is("deleted")));
+
+    verify(categoryService).findAllForAdmin("deleted");
   }
 
   @Test
