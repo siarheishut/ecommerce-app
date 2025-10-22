@@ -33,3 +33,9 @@ build/
 .vscode/
 
 *.DS_Store
+
+# Docker
+**/docker-compose.override.yml
+
+# Container's environment
+.env

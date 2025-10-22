@@ -1,0 +1,43 @@
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Maven build directory
+target/
+**/target/ # Optional but harmless
+
+# IDE specific files
+.idea/
+*.iml
+*.iws
+*.ipr
+.settings/
+.classpath
+.project
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
+.vscode/
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+# Log files
+*.log
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Maven wrapper jar
+.mvn/wrapper/maven-wrapper.jar
+
+# Local configuration
+docker-compose.override.yml
+**/docker-compose.override.yml
+.env

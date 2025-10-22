@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    container_name: ecommerce-app
+    platform: linux/amd64
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/ecommerce_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USER_VAR}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_VAR}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_SQL_INIT_MODE=always
+      - SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION=true
+    networks:
+      - ecommerce-network
+
+  db:
+    image: mysql:8.0
+    container_name: ecommerce-db
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_VAR}
+      MYSQL_DATABASE: ecommerce_db
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+volumes:
+  mysql_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
