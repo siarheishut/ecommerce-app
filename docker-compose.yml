@@ -9,10 +9,18 @@ services:
       db:
         condition: service_healthy
     environment:
+      - SPRING_PROFILES_ACTIVE=prod
+
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/ecommerce_db?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USER_VAR}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD_VAR}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME_VAR}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD_VAR}
+
+      - APP_BASE_URL=${APP_BASE_URL_VAR}
+
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_SQL_INIT_MODE=always
       - SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION=true
     networks:
