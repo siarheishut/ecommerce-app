@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@TestPropertySource(properties = {"spring.sql.init.mode=never"})
 public class OrderRepositoryTest {
 
   @Autowired
@@ -47,10 +49,10 @@ public class OrderRepositoryTest {
 
   @Test
   void whenFindOrderHistoryByUser_withExistingOrders_returnsDtoListSortedByDateDesc() {
-    Instant now = Instant.now();
+    Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
     Order order1 = new Order();
     order1.setUser(user);
-    order1.setOrderDate(now.minus(1, ChronoUnit.DAYS));
+    order1.setOrderDate(now.minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS));
     order1.setStatus(Order.Status.SHIPPED);
     order1.setTotalAmount(BigDecimal.TWO);
     order1.addOrderItems(List.of(new OrderItem(order1, product, 1)));
@@ -106,7 +108,7 @@ public class OrderRepositoryTest {
   private Order createValidOrder() {
     Order order = new Order();
     order.setUser(user);
-    order.setOrderDate(Instant.now());
+    order.setOrderDate(Instant.now().truncatedTo(ChronoUnit.MILLIS));
     order.setStatus(Order.Status.PENDING);
     order.setTotalAmount(BigDecimal.TEN);
     order.setShippingDetails(createShippingDetails());
