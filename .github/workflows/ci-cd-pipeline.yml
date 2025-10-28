@@ -77,6 +77,15 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+      # DEBUG START
+      - name: Display gcloud auth info
+        run: |
+          gcloud auth list
+          gcloud config list
+          echo "Attempting to print token for target SA:"
+          gcloud auth print-access-token ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      # DEBUG END
+
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE_NAME }} \
