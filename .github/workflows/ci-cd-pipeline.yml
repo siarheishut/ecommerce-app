@@ -69,6 +69,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # DEBUG START
+      - name: 'Debug: Print GitHub OIDC Subject'
+        run: |
+          echo "--- GitHub Actions Context ---"
+          echo "Repo: ${{ github.repository }}"
+          echo "Ref:  ${{ github.ref }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "--------------------------------"
+          echo "Expected OIDC Subject String:"
+          echo "repo:${{ github.repository }}:ref:${{ github.ref }}"
+          echo "--------------------------------"
+      # DEBUG END
+
       - name: Authenticate to Google Cloud
         uses: 'google-github-actions/auth@v2'
         with:
