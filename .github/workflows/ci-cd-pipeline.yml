@@ -72,6 +72,18 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
+      # DEBUG START
+      - name: Display gcloud auth info
+        run: |
+          echo "Attempting to see authenticated identity:"
+          gcloud auth list || echo "gcloud auth list failed"
+          echo "Checking env variables set by auth action:"
+          printenv | grep GOOGLE || echo "No GOOGLE env vars found"
+          echo "Attempting to print token for target SA using gcloud:"
+          google-github-actions/setup-gcloud@v2
+          gcloud auth print-access-token ${{ secrets.GCP_SERVICE_ACCOUNT }} || echo "Printing access token failed."
+      # DEBUG END
+
       - name: Set up Cloud SDK
         uses: 'google-github-actions/setup-gcloud@v2'
         with:
