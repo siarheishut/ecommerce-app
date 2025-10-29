@@ -8,6 +8,8 @@ on:
   pull_request:
     branches: [ "main" ]
 
+  workflow_dispatch:
+
 jobs:
   build:
     name: Build, Test and Push Image
@@ -59,7 +61,7 @@ jobs:
     name: Deploy to Cloud Run
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
 
     permissions:
       contents: 'read'
@@ -94,13 +96,21 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Deploy to Cloud Run
+        env:
+          SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
+          IMAGE_URL: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
+          REGION: ${{ secrets.CLOUD_RUN_REGION }}
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          SQL_INSTANCE: ${{ secrets.CLOUD_SQL_INSTANCE_CONNECTION_NAME }}
+          ENV_VARS_LIST: "SPRING_PROFILES_ACTIVE=prod,SPRING_DATASOURCE_URL=${{ secrets.DB_URL }},SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }},SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }},SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }},SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }},APP_BASE_URL=${{ secrets.APP_BASE_URL }}"
+
         run: |
-          gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE_NAME }} \
-            --image ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }} \
-            --region ${{ secrets.CLOUD_RUN_REGION }} \
+          gcloud run deploy "$SERVICE_NAME" \
+            --image "$IMAGE_URL" \
+            --region "$REGION" \
             --platform managed \
             --allow-unauthenticated \
-            --project ${{ secrets.GCP_PROJECT_ID }} \
-            --add-cloudsql-instances "${{ secrets.CLOUD_SQL_INSTANCE_CONNECTION_NAME }}" \
-            --set-env-vars="SPRING_PROFILES_ACTIVE=prod,SPRING_DATASOURCE_URL=${{ secrets.DB_URL }},SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }},SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }},SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }},SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }},APP_BASE_URL=${{ secrets.APP_BASE_URL }}" \
+            --project "$PROJECT_ID" \
+            --add-cloudsql-instances "$SQL_INSTANCE" \
+            --set-env-vars="$ENV_VARS_LIST" \
             --quiet
