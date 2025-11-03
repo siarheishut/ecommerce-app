@@ -18,10 +18,28 @@ jobs:
     permissions:
       contents: 'read'
       packages: 'write'
+      id-token: 'write'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Debug - Print GitHub Ref
+        run: echo "The Git ref for this job is ${{ github.ref }}"
+
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v2'
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker europe-central2-docker.pkg.dev
 
       - name: Set up JDK 24
         uses: actions/setup-java@v4
@@ -36,14 +54,6 @@ jobs:
       - name: Build and run tests with Maven
         run: ./mvnw test
 
-      - name: Log in to GHCR
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -52,8 +62,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') }}
-          tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
+          push: ${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || github.event_name == 'workflow_dispatch' }}
+          tags: europe-central2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ecommerce-images/ecommerce-app:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -68,9 +78,6 @@ jobs:
       id-token: 'write'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       # DEBUG START
       - name: 'Debug: Print GitHub OIDC Subject'
         run: |
@@ -98,11 +105,19 @@ jobs:
       - name: Deploy to Cloud Run
         env:
           SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
-          IMAGE_URL: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
+          IMAGE_URL: europe-central2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ecommerce-images/ecommerce-app:${{ github.sha }}
           REGION: ${{ secrets.CLOUD_RUN_REGION }}
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           SQL_INSTANCE: ${{ secrets.CLOUD_SQL_INSTANCE_CONNECTION_NAME }}
-          ENV_VARS_LIST: "SPRING_PROFILES_ACTIVE=prod,SPRING_DATASOURCE_URL=${{ secrets.DB_URL }},SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }},SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }},SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }},SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }},APP_BASE_URL=${{ secrets.APP_BASE_URL }}"
+
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_IP: ${{ secrets.DB_IP }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MAIL_USER: ${{ secrets.SPRING_MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.SPRING_MAIL_PASSWORD }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
 
         run: |
           gcloud run deploy "$SERVICE_NAME" \
@@ -112,5 +127,14 @@ jobs:
             --allow-unauthenticated \
             --project "$PROJECT_ID" \
             --add-cloudsql-instances "$SQL_INSTANCE" \
-            --set-env-vars="$ENV_VARS_LIST" \
+            --set-env-vars="SPRING_PROFILES_ACTIVE=prod" \
+            --set-env-vars="SPRING_JPA_HIBERNATE_DDL_AUTO=validate" \
+            --set-env-vars="SPRING_DATASOURCE_URL=jdbc:mysql://$DB_IP:3306/$DB_NAME?createDatabaseIfNotExist=false" \
+            --set-env-vars="SPRING_DATASOURCE_PROPERTIES_socketFactory=com.google.cloud.sql.mysql.SocketFactory" \
+            --set-env-vars="SPRING_DATASOURCE_PROPERTIES_cloudSqlInstance=$SQL_INSTANCE" \
+            --set-env-vars="SPRING_DATASOURCE_USERNAME=$DB_USER" \
+            --set-env-vars="SPRING_DATASOURCE_PASSWORD=$DB_PASSWORD" \
+            --set-env-vars="SPRING_MAIL_USERNAME=$MAIL_USER" \
+            --set-env-vars="SPRING_MAIL_PASSWORD=$MAIL_PASSWORD" \
+            --set-env-vars="APP_BASE_URL=$APP_BASE_URL" \
             --quiet
