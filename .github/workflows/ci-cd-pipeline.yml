@@ -137,4 +137,5 @@ jobs:
             --set-env-vars="SPRING_MAIL_USERNAME=$MAIL_USER" \
             --set-env-vars="SPRING_MAIL_PASSWORD=$MAIL_PASSWORD" \
             --set-env-vars="APP_BASE_URL=$APP_BASE_URL" \
+            --set-env-vars="SERVER_FORWARD_HEADERS_STRATEGY=NATIVE" \
             --quiet
