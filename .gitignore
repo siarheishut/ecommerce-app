@@ -39,3 +39,6 @@ build/
 
 # Container's environment
 .env
+
+# Firebase
+.firebase/
