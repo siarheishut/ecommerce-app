@@ -9,13 +9,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
 @Getter
 @Table(name = "order_items")
 @NoArgsConstructor
-public class OrderItem {
+public class OrderItem implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 4L;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;

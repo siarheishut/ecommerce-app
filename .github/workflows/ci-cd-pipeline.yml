@@ -127,6 +127,7 @@ jobs:
             --allow-unauthenticated \
             --project "$PROJECT_ID" \
             --add-cloudsql-instances "$SQL_INSTANCE" \
+            --set-env-vars="SPRING_SESSION_JDBC_INITIALIZE_SCHEMA=always" \
             --set-env-vars="SPRING_PROFILES_ACTIVE=prod" \
             --set-env-vars="SPRING_JPA_HIBERNATE_DDL_AUTO=validate" \
             --set-env-vars="SPRING_DATASOURCE_URL=jdbc:mysql://$DB_IP:3306/$DB_NAME?createDatabaseIfNotExist=false" \
@@ -138,4 +139,9 @@ jobs:
             --set-env-vars="SPRING_MAIL_PASSWORD=$MAIL_PASSWORD" \
             --set-env-vars="APP_BASE_URL=$APP_BASE_URL" \
             --set-env-vars="SERVER_FORWARD_HEADERS_STRATEGY=NATIVE" \
+            --set-env-vars="SERVER_SERVLET_SESSION_COOKIE_DOMAIN=siarhei-shut-ecommerce.com" \
+            --set-env-vars="SERVER_SERVLET_SESSION_COOKIE_PATH=/" \
+            --set-env-vars="SERVER_SERVLET_SESSION_COOKIE_SAME_SITE=None" \
+            --set-env-vars="SERVER_SERVLET_SESSION_COOKIE_SECURE=true" \
+            --set-env-vars="SPRING_SESSION_SAVE_MODE=always" \
             --quiet

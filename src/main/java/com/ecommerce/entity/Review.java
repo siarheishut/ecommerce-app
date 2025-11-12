@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Instant;
 
 @Entity
@@ -19,7 +21,11 @@ import java.time.Instant;
 @Table(name = "reviews", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "product_id"})
 })
-public class Review {
+public class Review implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 6L;
+
   @Column(nullable = false, updatable = false)
   private final Instant createdAt = Instant.now();
 

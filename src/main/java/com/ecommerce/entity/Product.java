@@ -6,6 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -21,7 +23,11 @@ import java.util.Set;
 @SQLDelete(sql = "UPDATE products SET is_deleted = true WHERE id=?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "products")
-public class Product {
+public class Product implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 5L;
+
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
       name = "categories_products",

@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,7 +22,11 @@ import java.util.Set;
 @Getter
 @EqualsAndHashCode(of = "username")
 @Table(name = "users")
-public class User {
+public class User implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 9L;
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private final List<Address> addresses = new ArrayList<>();
 

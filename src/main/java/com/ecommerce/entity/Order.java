@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,7 +19,11 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Table(name = "orders")
-public class Order {
+public class Order implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 3L;
+
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @NotEmpty(message = "Order must contain at least one item.")
   private final List<OrderItem> orderItems = new ArrayList<>();

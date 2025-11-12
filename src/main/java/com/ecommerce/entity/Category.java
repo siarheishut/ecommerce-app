@@ -9,6 +9,8 @@ import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,11 @@ import java.util.List;
 @SQLDelete(sql = "UPDATE categories SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 @EqualsAndHashCode(of = "name")
-public class Category {
+public class Category implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 2L;
+
   @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
   private final List<Product> products = new ArrayList<>();
 
