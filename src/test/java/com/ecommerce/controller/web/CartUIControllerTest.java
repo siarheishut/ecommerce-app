@@ -80,7 +80,7 @@ public class CartUIControllerTest {
             .param("returnUrl", "/some-page")
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/some-page"))
+        .andExpect(redirectedUrl("/some-page#product-1"))
         .andExpect(flash().attribute("errorMessage", "Product with ID 1 not found."));
 
     verify(cartService).addProductToCart(1L, 2);
@@ -109,7 +109,7 @@ public class CartUIControllerTest {
             .param("returnUrl", "/some-page")
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/some-page"))
+        .andExpect(redirectedUrl("/some-page#product-1"))
         .andExpect(flash().attribute("errorMessage",
             "Not enough stock for the product with ID 1."));
 
@@ -136,7 +136,7 @@ public class CartUIControllerTest {
             .param("returnUrl", "/some-page")
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/some-page"))
+        .andExpect(redirectedUrl("/some-page#product-1"))
         .andExpect(flash().attribute("successMessage", "Products have been added to your cart"));
 
     verify(cartService).addProductToCart(1L, 2);

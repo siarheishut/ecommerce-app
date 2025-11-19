@@ -1,6 +1,6 @@
 package com.ecommerce.cart;
 
-import com.ecommerce.entity.Product;
+import com.ecommerce.dto.ProductViewDto;
 import com.ecommerce.exception.InsufficientStockException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.SessionScope;
@@ -17,17 +17,17 @@ import java.util.Map;
 public class ShoppingCart implements Serializable {
   private final Map<Long, CartSessionItem> items = new HashMap<>();
 
-  public synchronized void addItem(Product product, int quantity) {
-    if (product.getStockQuantity() < quantity) {
-      throw new InsufficientStockException("Not enough stock for product: " + product.getName() +
-          ".Available: " + product.getStockQuantity() + ".");
+  public synchronized void addItem(ProductViewDto product, int quantity) {
+    if (product.stockQuantity() < quantity) {
+      throw new InsufficientStockException("Not enough stock for product: " + product.name() +
+          ".Available: " + product.stockQuantity() + ".");
     }
 
-    CartSessionItem existingItem = items.get(product.getId());
+    CartSessionItem existingItem = items.get(product.id());
     if (existingItem != null) {
-      items.put(product.getId(), new CartSessionItem(product, existingItem.quantity() + quantity));
+      items.put(product.id(), new CartSessionItem(product, existingItem.quantity() + quantity));
     } else {
-      items.put(product.getId(), new CartSessionItem(product, quantity));
+      items.put(product.id(), new CartSessionItem(product, quantity));
     }
   }
 
@@ -38,10 +38,10 @@ public class ShoppingCart implements Serializable {
         removeItem(productId);
         return;
       }
-      Product product = item.product();
-      if (product.getStockQuantity() < quantity) {
-        throw new InsufficientStockException("Not enough stock for product: " + product.getName() +
-            ".Available: " + product.getStockQuantity() + ".");
+      ProductViewDto product = item.product();
+      if (product.stockQuantity() < quantity) {
+        throw new InsufficientStockException("Not enough stock for product: " + product.name() +
+            ".Available: " + product.stockQuantity() + ".");
       }
       items.put(productId, new CartSessionItem(product, quantity));
     }
@@ -61,7 +61,7 @@ public class ShoppingCart implements Serializable {
 
   public synchronized BigDecimal getTotalAmount() {
     return items.values().stream()
-        .map(item -> item.product().getPrice().multiply(new BigDecimal(item.quantity())))
+        .map(item -> item.product().price().multiply(new BigDecimal(item.quantity())))
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 }

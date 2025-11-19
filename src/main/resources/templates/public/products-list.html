@@ -3,13 +3,20 @@
       th:replace="~{fragments/main-layout :: main-layout(~{::title}, ~{::.content})}"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <title>Products List</title>
+    <style>
+        [id^="product-"] {
+            scroll-margin-top: 100px;
+        }
+    </style>
 </head>
 <body>
 
 <div class="content">
+    <div id="js-alert-container"
+         style="position: fixed; top: 80px; right: 20px; z-index: 1050; width: 300px;"></div>
+
     <div class="alert alert-success alert-dismissible fade show" role="alert"
          th:if="${successMessage}">
         <span th:text="${successMessage}"></span>
@@ -26,7 +33,7 @@
     <h1 class="mb-4">Our Products</h1>
 
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-3 mb-4">
             <form id="filter-form" method="GET" th:action="@{/products/list}">
                 <div class="mb-3">
                     <label class="form-label fw-bold" for="searchName">
@@ -59,7 +66,8 @@
                 <hr>
                 <!-- Availability Filter -->
                 <div class="form-check mb-3">
-                    <input class="form-check-input" id="onlyAvailable" name="onlyAvailable"
+                    <input class="form-check-input" id="onlyAvailable"
+                           name="onlyAvailable"
                            th:checked="${onlyAvailable}"
                            type="checkbox" value="true">
                     <label class="form-check-label" for="onlyAvailable">
@@ -101,7 +109,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-4 mb-4"
+                <div class="col-6 col-md-4 mb-4"
                      th:each="product : ${productPage.content}">
                     <div class="card h-100">
                         <div class="card-body d-flex flex-column">
@@ -115,7 +123,8 @@
                                 Product description.</p>
                             <p class="card-text">
                                 <strong>Price:</strong>
-                                $<span th:text="${#numbers.formatDecimal(product.price, 1, 2)}">0.00</span>
+                                $<span
+                                    th:text="${#numbers.formatDecimal(product.price, 1, 2)}">0.00</span>
                             </p>
                             <p class="card-text">
                                 <small class="text-muted"
@@ -126,13 +135,12 @@
 
                         <!-- Add to Cart Form -->
                         <div class="card-footer">
-                            <form method="POST" th:action="@{/cart/add}">
+                            <form method="POST"
+                                  th:action="@{/cart/add}"
+                                  th:id="'product-' + ${product.id}">
                                 <input name="productId" th:value="${product.id}"
                                        type="hidden"/>
                                 <input name="returnUrl" th:value="${returnUrl}"
-                                       type="hidden"/>
-                                <input th:name="${_csrf.parameterName}"
-                                       th:value="${_csrf.token}"
                                        type="hidden"/>
                                 <div class="input-group">
                                     <input class="form-control stock-quantity-input"
@@ -236,15 +244,57 @@
     <!-- Add to Cart -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('form[action$="/cart/add"]').forEach(form => {
-                form.addEventListener('submit', function (e) {
-                    const button = e.target.querySelector('button[type="submit"]');
-                    if (button) {
-                        button.disabled = true;
-                        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+            const forms = document.querySelectorAll('form[action$="/cart/add"]');
+            forms.forEach(form => {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const button = form.querySelector('button');
+                    const originalText = button.innerHTML;
+
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
+                    try {
+                        const formData = new FormData(form);
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const htmlText = await response.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+
+                        const errorAlert = doc.querySelector('.alert-danger');
+                        if (errorAlert) {
+                            const errorMsg = errorAlert.textContent.replace('Close', '').trim();
+                            showAddAlert('danger', errorMsg || 'Failed to add product.');
+                        } else {
+                            showAddAlert('success', 'Product added to cart successfully!');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showAddAlert('danger', 'Network error occurred.');
+                    } finally {
+                        button.disabled = false;
+                        button.innerHTML = originalText;
                     }
                 });
             });
+
+            function showAddAlert(type, message) {
+                const container = document.getElementById('js-alert-container');
+                const alertDiv = document.createElement('div');
+
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show shadow`;
+                alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+                container.appendChild(alertDiv);
+                setTimeout(() => {
+                    alertDiv.classList.remove('show');
+                    setTimeout(() => alertDiv.remove(), 150);
+                }, 3000);
+            }
         });
     </script>
 </div>

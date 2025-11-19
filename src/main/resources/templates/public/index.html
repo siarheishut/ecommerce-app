@@ -4,7 +4,6 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
     <title>Home</title>
 </head>
 <body>
@@ -21,17 +20,17 @@
 
             <h1 class="display-5 fw-bold">Welcome to E-Commerce</h1>
 
-            <p class="col-md-8 fs-4" sec:authorize="!isAuthenticated()">
+            <p class="fs-4" sec:authorize="!isAuthenticated()">
                 Your one-stop shop for the best products. Browse our collection
                 and find what you need.
             </p>
 
-            <p class="col-md-8 fs-4" sec:authorize="isAuthenticated()">
+            <p class="fs-4" sec:authorize="isAuthenticated()">
                 Welcome back, <strong sec:authentication="name">User</strong>!
                 We're glad to see you again.
             </p>
 
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <a class="btn btn-primary btn-lg" role="button"
                    th:href="@{/products/list}">Shop Now</a>
                 <button class="btn btn-secondary btn-lg"

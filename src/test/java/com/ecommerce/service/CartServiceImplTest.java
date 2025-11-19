@@ -4,6 +4,7 @@ import com.ecommerce.cart.CartSessionItem;
 import com.ecommerce.cart.ShoppingCart;
 import com.ecommerce.dto.CartItemViewDto;
 import com.ecommerce.dto.CartViewDto;
+import com.ecommerce.dto.ProductViewDto;
 import com.ecommerce.entity.Product;
 import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.ResourceNotFoundException;
@@ -49,7 +50,7 @@ public class CartServiceImplTest {
         () -> cartService.addProductToCart(productId, 2)
     );
 
-    verify(shoppingCart, never()).addItem(any(Product.class), eq(2));
+    verify(shoppingCart, never()).addItem(any(ProductViewDto.class), eq(2));
     verify(cartLock).lock();
     verify(cartLock).unlock();
     assertThat(exception.getMessage()).isEqualTo("Product with ID 1 not found.");
@@ -67,7 +68,7 @@ public class CartServiceImplTest {
 
     cartService.addProductToCart(productId, quantity);
 
-    verify(shoppingCart).addItem(product, quantity);
+    verify(shoppingCart).addItem(any(ProductViewDto.class), eq(quantity));
     verify(cartLock).lock();
     verify(cartLock).unlock();
   }
@@ -160,14 +161,16 @@ public class CartServiceImplTest {
     when(product1.getId()).thenReturn(1L);
     when(product1.getName()).thenReturn("Chandelier");
     when(product1.getPrice()).thenReturn(new BigDecimal("1200.00"));
+    when(product1.getStockQuantity()).thenReturn(10);
 
     Product product2 = mock(Product.class);
     when(product2.getId()).thenReturn(2L);
     when(product2.getName()).thenReturn("Box");
     when(product2.getPrice()).thenReturn(new BigDecimal("25.50"));
+    when(product2.getStockQuantity()).thenReturn(50);
 
-    CartSessionItem item1 = new CartSessionItem(product1, 1);
-    CartSessionItem item2 = new CartSessionItem(product2, 2);
+    CartSessionItem item1 = new CartSessionItem(ProductViewDto.fromEntity(product1, 1), 1);
+    CartSessionItem item2 = new CartSessionItem(ProductViewDto.fromEntity(product2, 2), 2);
 
     when(shoppingCart.getItems()).thenReturn(List.of(item1, item2));
     when(productRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(product1, product2));
@@ -177,9 +180,9 @@ public class CartServiceImplTest {
 
     assertThat(items).hasSize(2);
     assertThat(items.get(0).product().name()).isEqualTo("Chandelier");
-    assertThat(items.get(0).quantity()).isEqualTo(1);
+    assertThat(items.get(0).product().inCartQuantity()).isEqualTo(1);
     assertThat(items.get(1).product().name()).isEqualTo("Box");
-    assertThat(items.get(1).quantity()).isEqualTo(2);
+    assertThat(items.get(1).product().inCartQuantity()).isEqualTo(2);
 
     assertThat(cartView.totalAmount()).isEqualByComparingTo("1251.00");
   }
