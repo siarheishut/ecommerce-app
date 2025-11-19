@@ -1,9 +1,11 @@
 package com.ecommerce.cart;
 
-import com.ecommerce.entity.Product;
+import com.ecommerce.dto.ProductViewDto;
+
+import java.io.Serializable;
 
 public record CartSessionItem(
-    Product product,
+    ProductViewDto product,
     int quantity
-) {
+) implements Serializable {
 }

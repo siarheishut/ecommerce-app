@@ -5,8 +5,15 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Data
-public class AddressDto {
+public class AddressDto implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
+
   private Long id;
 
   @NotBlank(message = "Address name is required")

@@ -44,10 +44,10 @@ public class CartUIController {
     }
 
     if (isUrlLocal(returnUrl)) {
-      return "redirect:" + returnUrl;
+      return "redirect:" + returnUrl + "#product-" + productId;
     } else {
       log.warn("Attempted redirect to a non-local URL was blocked: {}", returnUrl);
-      return "redirect:/products/list";
+      return "redirect:/products/list#product-" + productId;
     }
   }
 

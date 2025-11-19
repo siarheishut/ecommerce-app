@@ -39,7 +39,7 @@ public class CartServiceImpl implements CartService {
               "Product with ID " + productId + " not found."));
 
       int currentQuantityInCart = shoppingCart.getItems().stream()
-          .filter(item -> item.product().getId().equals(productId))
+          .filter(item -> item.product().id().equals(productId))
           .mapToInt(CartSessionItem::quantity)
           .sum();
 
@@ -47,7 +47,8 @@ public class CartServiceImpl implements CartService {
         throw new InsufficientStockException("Not enough stock for " + product.getName() +
             ". Available: " + (product.getStockQuantity() - currentQuantityInCart + "."));
       }
-      shoppingCart.addItem(product, quantity);
+      ProductViewDto productDto = ProductViewDto.fromEntity(product, quantity);
+      shoppingCart.addItem(productDto, quantity);
     } finally {
       cartLock.unlock();
     }
@@ -87,7 +88,7 @@ public class CartServiceImpl implements CartService {
   @Transactional
   public CartViewDto getCartForCurrentUser() {
     List<Long> productIds = shoppingCart.getItems().stream()
-        .map(item -> item.product().getId())
+        .map(item -> item.product().id())
         .collect(Collectors.toList());
 
     if (productIds.isEmpty()) {
@@ -99,17 +100,19 @@ public class CartServiceImpl implements CartService {
 
     List<CartItemViewDto> detailedItems = shoppingCart.getItems().stream()
         .map(cartItem -> {
-          Product product = productMap.get(cartItem.product().getId());
+          Product product = productMap.get(cartItem.product().id());
           if (product == null) {
             return null;
           }
-          return new CartItemViewDto(ProductViewDto.fromEntity(product), cartItem.quantity());
+          return new CartItemViewDto(
+              ProductViewDto.fromEntity(product, cartItem.quantity()));
         })
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
 
     BigDecimal totalAmount = detailedItems.stream()
-        .map(item -> item.product().price().multiply(new BigDecimal(item.quantity())))
+        .map(item -> item.product().price().multiply(
+            new BigDecimal(item.product().inCartQuantity())))
         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
     return new CartViewDto(detailedItems, totalAmount);

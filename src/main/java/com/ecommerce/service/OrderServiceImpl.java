@@ -67,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
     order.setStatus(Order.Status.PENDING);
     order.setShippingDetails(shippingDetails);
     List<Long> productIds = shoppingCart.getItems().stream()
-        .map(item -> item.product().getId())
+        .map(item -> item.product().id())
         .toList();
     List<Product> productsToUpdate = new ArrayList<>();
 
@@ -76,9 +76,9 @@ public class OrderServiceImpl implements OrderService {
 
     List<OrderItem> orderItems = new ArrayList<>();
     for (CartSessionItem cartItem : shoppingCart.getItems()) {
-      Product product = productMap.get(cartItem.product().getId());
+      Product product = productMap.get(cartItem.product().id());
       if (product == null) {
-        throw new ResourceNotFoundException("Product with ID " + cartItem.product().getId() +
+        throw new ResourceNotFoundException("Product with ID " + cartItem.product().id() +
             " not found.");
       }
       if (product.getStockQuantity() < cartItem.quantity()) {

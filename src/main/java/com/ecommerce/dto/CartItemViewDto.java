@@ -1,4 +1,6 @@
 package com.ecommerce.dto;
 
-public record CartItemViewDto(ProductViewDto product, int quantity) {
+import java.io.Serializable;
+
+public record CartItemViewDto(ProductViewDto product) implements Serializable {
 }

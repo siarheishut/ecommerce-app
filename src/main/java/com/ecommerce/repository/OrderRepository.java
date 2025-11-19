@@ -20,7 +20,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   List<OrderHistoryDto> findOrderHistoryByUser(@Param("user") User user);
 
   @Query("""
-      SELECT new com.ecommerce.dto.OrderHistoryItemDto(oi.order.id, oi.productName, oi.productDescription, oi.quantity, oi.price)
+      SELECT new com.ecommerce.dto.OrderHistoryItemDto(oi.product.id, oi.order.id, oi.productName, oi.productDescription, oi.quantity, oi.price)
       FROM OrderItem oi
       WHERE oi.order.id IN :orderIds
       """)

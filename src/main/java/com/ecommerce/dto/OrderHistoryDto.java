@@ -32,6 +32,7 @@ public record OrderHistoryDto(
     }
     List<OrderHistoryItemDto> itemDtos = order.getOrderItems().stream()
         .map(item -> new OrderHistoryItemDto(
+            item.getProduct().getId(),
             order.getId(),
             item.getProductName(),
             item.getProductDescription(),

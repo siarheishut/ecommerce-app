@@ -1,5 +1,8 @@
 package com.ecommerce.controller.web;
 
+import com.ecommerce.cart.CartSessionItem;
+import com.ecommerce.cart.ShoppingCart;
+import com.ecommerce.dto.ProductViewDto;
 import com.ecommerce.dto.ReviewDto;
 import com.ecommerce.dto.ReviewSubmissionDto;
 import com.ecommerce.entity.Category;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -40,6 +44,7 @@ public class ProductUIController {
   private final ProductService productService;
   private final CategoryService categoryService;
   private final ReviewService reviewService;
+  private final ShoppingCart shoppingCart;
 
   @GetMapping("/list")
   public String showProductList(
@@ -74,9 +79,16 @@ public class ProductUIController {
     Page<Product> productPage = productService.searchProducts(
         name, categoryIds, minPrice, maxPrice, onlyAvailable, pageable);
 
+    Map<Long, Integer> productQuantitiesInCart = shoppingCart.getItems().stream()
+        .collect(Collectors.toMap(item -> item.product().id(), CartSessionItem::quantity, Integer::sum));
+
+    Page<ProductViewDto> productDtoPage = productPage.map(product ->
+        ProductViewDto.fromEntity(product, productQuantitiesInCart.getOrDefault(product.getId(), 0))
+    );
+
     List<Category> categories = categoryService.findAllSortedByName();
 
-    model.addAttribute("productPage", productPage);
+    model.addAttribute("productPage", productDtoPage);
     model.addAttribute("categories", categories);
     model.addAttribute("minPrice", minPrice);
     model.addAttribute("maxPrice", maxPrice);
@@ -95,17 +107,31 @@ public class ProductUIController {
   @GetMapping("/{id}")
   public String productDetail(@PathVariable("id") Long id, Model model,
                               @PageableDefault(size = 5) Pageable pageable,
+                              HttpServletRequest request,
                               RedirectAttributes redirectAttributes) {
     log.info("Requesting product detail page for product ID: {}", id);
     try {
       Product product = productService.findById(id)
           .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found."));
+
+      int inCartQuantity = shoppingCart.getItems().stream()
+          .filter(item -> item.product().id().equals(id))
+          .mapToInt(CartSessionItem::quantity)
+          .sum();
+
+      ProductViewDto productDto = ProductViewDto.fromEntity(product, inCartQuantity);
+
       Page<ReviewDto> reviewsPage = reviewService.getReviewsForProduct(id, pageable);
-      model.addAttribute("product", product);
+      model.addAttribute("product", productDto);
       model.addAttribute("reviewsPage", reviewsPage);
       if (!model.containsAttribute("newReview")) {
         model.addAttribute("newReview", new ReviewSubmissionDto(null, ""));
       }
+
+      String requestUri = request.getRequestURI();
+      String queryString = request.getQueryString();
+      String returnUrl = requestUri + (queryString != null ? "?" + queryString : "");
+      model.addAttribute("returnUrl", returnUrl);
     } catch (ResourceNotFoundException e) {
       log.warn("Product with ID {} not found.", id);
       redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -18,7 +17,6 @@ public class EmailServiceImpl implements EmailService {
   private String appBaseUrl;
 
   @Override
-  @Async
   public void sendOrderConfirmationEmail(Order order) {
     SimpleMailMessage message = new SimpleMailMessage();
     message.setFrom("no-reply@ecommerce.com");
@@ -49,7 +47,6 @@ public class EmailServiceImpl implements EmailService {
   }
 
   @Override
-  @Async
   public void sendPasswordResetEmail(User user, String token) {
     String url = UriComponentsBuilder.fromUriString(appBaseUrl)
         .path("/reset-password")

@@ -80,7 +80,7 @@ public class OrderUIControllerTest {
   @WithMockUser
   void shippingDetailsForm_whenCartIsNotEmpty_shouldReturnForm() throws Exception {
     when(cartService.getCartForCurrentUser())
-        .thenReturn(new CartViewDto(List.of(new CartItemViewDto(null, 10)), BigDecimal.TEN));
+        .thenReturn(new CartViewDto(List.of(new CartItemViewDto(null)), BigDecimal.TEN));
     when(userService.getCurrentUser()).thenReturn(testUser);
     when(addressService.getAddressesForCurrentUser()).thenReturn(Collections.emptyList());
 

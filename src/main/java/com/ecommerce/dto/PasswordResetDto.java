@@ -5,9 +5,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Data
 @PasswordMatches(passwordFieldName = "password", confirmPasswordFieldName = "confirmPassword")
-public class PasswordResetDto {
+public class PasswordResetDto implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @NotBlank
     private String token;
 
