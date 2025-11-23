@@ -118,6 +118,7 @@ jobs:
           MAIL_USER: ${{ secrets.SPRING_MAIL_USERNAME }}
           MAIL_PASSWORD: ${{ secrets.SPRING_MAIL_PASSWORD }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          REMEMBER_ME_KEY: ${{ secrets.REMEMBER_ME_KEY }}
 
         run: |
           gcloud run deploy "$SERVICE_NAME" \
@@ -141,4 +142,5 @@ jobs:
             --set-env-vars="SPRING_SESSION_JDBC_INITIALIZE_SCHEMA=always" \
             --set-env-vars="SERVER_FORWARD_HEADERS_STRATEGY=NATIVE" \
             --set-env-vars="SERVER_SERVLET_SESSION_COOKIE_NAME=__session" \
+            --set-env-vars="REMEMBER_ME_KEY=$REMEMBER_ME_KEY" \
             --quiet
