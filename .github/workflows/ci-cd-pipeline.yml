@@ -140,4 +140,5 @@ jobs:
             --set-env-vars="SPRING_SESSION_STORE_TYPE=jdbc" \
             --set-env-vars="SPRING_SESSION_JDBC_INITIALIZE_SCHEMA=always" \
             --set-env-vars="SERVER_FORWARD_HEADERS_STRATEGY=NATIVE" \
+            --set-env-vars="SERVER_SERVLET_SESSION_COOKIE_NAME=__session" \
             --quiet

@@ -123,8 +123,8 @@
                                 Product description.</p>
                             <p class="card-text">
                                 <strong>Price:</strong>
-                                $<span
-                                    th:text="${#numbers.formatDecimal(product.price, 1, 2)}">0.00</span>
+                                <span th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">
+                                    0.00</span>
                             </p>
                             <p class="card-text">
                                 <small class="text-muted"

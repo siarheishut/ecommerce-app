@@ -42,7 +42,7 @@
                  th:id="'collapse' + ${iter.index}">
                 <div class="accordion-body overflow-x-auto">
                     <p><strong>Total Amount:</strong> <span
-                            th:text="${#numbers.formatCurrency(order.totalAmount)}">$0.00</span>
+                            th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">$0.00</span>
                     </p>
                     <table class="table table-sm">
                         <thead>
@@ -64,7 +64,7 @@
                                 1
                             </td>
                             <td class="text-end"
-                                th:text="${#numbers.formatCurrency(item.price)}">
+                                th:text="'$' + ${#numbers.formatDecimal(item.price, 1, 2)}">
                                 $0.00
                             </td>
                         </tr>

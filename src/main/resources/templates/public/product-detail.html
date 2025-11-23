@@ -19,7 +19,7 @@
             <p class="lead" th:text="${product.description}">Product
                 Description.</p>
             <h3>
-                <span th:text="${#numbers.formatCurrency(product.price)}">
+                <span th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">
                     $0.00</span></h3>
             <p><strong>Average Rating:</strong>
                 <span th:text="${#numbers.formatDecimal(product.averageRating, 1, 2)}">0.0</span>/5
