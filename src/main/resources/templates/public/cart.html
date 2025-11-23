@@ -20,7 +20,7 @@
     </style>
 
     <h2>Your Shopping Cart</h2>
- 
+
     <div class="alert alert-danger" role="alert" th:if="${errorMessage}"
          th:text="${errorMessage}"></div>
 
@@ -47,7 +47,7 @@
                     <tr th:each="item : ${cart.items}">
                         <td th:text="${item.product.name}">Product Name</td>
                         <td class="text-end"
-                            th:text="${#numbers.formatCurrency(item.product.price == null ? 0 : item.product.price)}"></td>
+                            th:text="'$' + ${#numbers.formatDecimal(item.product.price == null ? 0 : item.product.price, 1, 2)}"></td>
                         <td class="text-center" style="min-width: 160px;">
                             <form class="d-inline" method="post"
                                   th:action="@{/cart/update}">
@@ -81,8 +81,7 @@
                             </form>
                         </td>
                         <td class="text-end"
-                            th:text="${#numbers.formatCurrency(item.product.inCartQuantity() * item.product.price())}"></td>
-
+                            th:text="'$' + ${#numbers.formatDecimal(item.product.inCartQuantity() * item.product.price(), 1, 2)}"></td>
                         <td class="text-center">
                             <form method="post" th:action="@{/cart/remove}">
                                 <input th:name="${_csrf.parameterName}"
@@ -108,7 +107,7 @@
                         <td class="text-end fw-bold" colspan="4">Grand Total
                         </td>
                         <td class="text-end fw-bold"
-                            th:text="${#numbers.formatCurrency(cart.totalAmount)}"></td>
+                            th:text="'$' + ${#numbers.formatDecimal(cart.totalAmount, 1, 2)}"></td>
                     </tr>
                     </tfoot>
                 </table>

@@ -102,7 +102,7 @@
                             th:text="${product.description}"
                             th:title="${product.description}"></td>
                         <td class="text-end text-nowrap"
-                            th:text="${#numbers.formatCurrency(product.price)}"></td>
+                            th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}"></td>
                         <td class="text-center"
                             th:text="${product.stockQuantity}"></td>
                         <td class="text-truncate" style="max-width: 120px;"
