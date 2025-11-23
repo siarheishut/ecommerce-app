@@ -8,30 +8,94 @@
 </head>
 <body>
 <div class="content container mt-5">
-    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div class="alert alert-success" th:if="${successMessage}"
+         th:text="${successMessage}"></div>
+    <div class="alert alert-danger" th:if="${errorMessage}"
+         th:text="${errorMessage}"></div>
 
     <div class="row">
         <div class="col-md-8">
             <h1 th:text="${product.name}">Product Name</h1>
-            <p class="lead" th:text="${product.description}">Product Description.</p>
+            <p class="lead" th:text="${product.description}">Product
+                Description.</p>
             <h3>
-                <span th:text="${#numbers.formatCurrency(product.price)}">
+                <span th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">
                     $0.00</span></h3>
             <p><strong>Average Rating:</strong>
                 <span th:text="${#numbers.formatDecimal(product.averageRating, 1, 2)}">0.0</span>/5
                 (<span th:text="${product.reviewCount}">0</span> reviews)</p>
+
+            <!-- Add to Cart Form -->
+            <div class="mt-4">
+                <style>
+                    .no-spinners::-webkit-inner-spin-button,
+                    .no-spinners::-webkit-outer-spin-button {
+                        -webkit-appearance: none;
+                        margin: 0;
+                    }
+
+                    .no-spinners {
+                        -moz-appearance: textfield;
+                    }
+                </style>
+
+                <form method="POST" th:action="@{/cart/add}">
+                    <input name="productId" th:value="${product.id}"
+                           type="hidden"/>
+                    <input name="returnUrl" th:value="${returnUrl}"
+                           type="hidden"/>
+
+                    <div class="row align-items-center">
+                        <div class="col-md-5 col-lg-4">
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary"
+                                        onclick="var input = this.nextElementSibling; input.stepDown();"
+                                        th:disabled="${!product.isAvailableInStock()}"
+                                        type="button">
+                                    -
+                                </button>
+                                <input class="form-control text-center stock-quantity-input no-spinners"
+                                       name="quantity"
+                                       th:max="${product.getAvailableForCart()}"
+                                       th:min="${product.isAvailableInStock() ? 1 : 0}"
+                                       th:value="${product.isAvailableInStock() ? 1 : 0}"
+                                       type="number">
+                                <button class="btn btn-outline-secondary"
+                                        onclick="var input = this.previousElementSibling; input.stepUp();"
+                                        th:disabled="${!product.isAvailableInStock()}"
+                                        type="button">
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-7 col-lg-8 mt-2 mt-md-0">
+                            <button class="btn btn-success w-100"
+                                    th:disabled="${!product.isAvailableInStock()}"
+                                    type="submit">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-danger small mt-1"
+                         th:if="${!product.isAvailableInStock()}">
+                        Out of stock
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     <hr>
 
     <div sec:authorize="isAuthenticated()">
         <h3>Write a Review</h3>
-        <form th:action="@{/products/{id}/reviews(id=${product.id})}" th:object="${newReview}" method="post">
+        <form method="post"
+              th:action="@{/products/{id}/reviews(id=${product.id})}"
+              th:object="${newReview}">
             <div class="mb-3">
-                <label for="rating" class="form-label">Your Rating</label>
-                <select class="form-select" id="rating" th:field="*{rating}"
-                        th:classappend="${#fields.hasErrors('rating')} ? 'is-invalid' : ''">
+                <label class="form-label" for="rating">Your Rating</label>
+                <select class="form-select" id="rating"
+                        th:classappend="${#fields.hasErrors('rating')} ? 'is-invalid' : ''"
+                        th:field="*{rating}">
                     <option value="">Choose...</option>
                     <option value="5">5 - Excellent</option>
                     <option value="4">4 - Good</option>
@@ -39,15 +103,20 @@
                     <option value="2">2 - Fair</option>
                     <option value="1">1 - Poor</option>
                 </select>
-                <div class="invalid-feedback" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"></div>
+                <div class="invalid-feedback"
+                     th:errors="*{rating}"
+                     th:if="${#fields.hasErrors('rating')}"></div>
             </div>
             <div class="mb-3">
-                <label for="comment" class="form-label">Your Comment</label>
-                <textarea class="form-control" id="comment" rows="3" th:field="*{comment}"
-                          th:classappend="${#fields.hasErrors('comment')} ? 'is-invalid' : ''"></textarea>
-                <div class="invalid-feedback" th:if="${#fields.hasErrors('comment')}" th:errors="*{comment}"></div>
+                <label class="form-label" for="comment">Your Comment</label>
+                <textarea class="form-control" id="comment" rows="3"
+                          th:classappend="${#fields.hasErrors('comment')} ? 'is-invalid' : ''"
+                          th:field="*{comment}"></textarea>
+                <div class="invalid-feedback"
+                     th:errors="*{comment}"
+                     th:if="${#fields.hasErrors('comment')}"></div>
             </div>
-            <button type="submit" class="btn btn-primary">Submit Review</button>
+            <button class="btn btn-primary" type="submit">Submit Review</button>
         </form>
     </div>
     <div sec:authorize="!isAuthenticated()">
@@ -60,31 +129,57 @@
     <div th:if="${reviewsPage.isEmpty()}">
         <p>No reviews yet. Be the first to write one!</p>
     </div>
-    <div th:unless="${reviewsPage.isEmpty()}" th:each="review : ${reviewsPage.content}" class="card mb-3">
+    <div class="card mb-3"
+         th:each="review : ${reviewsPage.content}"
+         th:unless="${reviewsPage.isEmpty()}">
         <div class="card-body">
-            <h5 class="card-title" th:text="${review.authorUsername}">Author</h5>
+            <h5 class="card-title" th:text="${review.authorUsername}">
+                Author</h5>
             <h6 class="card-subtitle mb-2 text-muted">
                 Rating: <span th:text="${review.rating}">5</span>/5 -
                 <span th:text="${#temporals.format(review.createdAt, 'dd-MMM-yyyy HH:mm')}">Date</span>
             </h6>
-            <p class="card-text" th:text="${review.comment}">Review comment goes here.</p>
+            <p class="card-text" th:text="${review.comment}">Review comment goes
+                here.</p>
         </div>
     </div>
 
     <nav aria-label="Review pagination" th:if="${reviewsPage.totalPages > 1}">
         <ul class="pagination">
-            <li class="page-item" th:classappend="${reviewsPage.isFirst()} ? 'disabled'">
-                <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${reviewsPage.number - 1})}">Previous</a>
+            <li class="page-item"
+                th:classappend="${reviewsPage.isFirst()} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/products/{id}(id=${product.id}, page=${reviewsPage.number - 1})}">Previous</a>
             </li>
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, reviewsPage.totalPages - 1)}"
-                th:classappend="${i == reviewsPage.number} ? 'active'">
-                <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${i})}" th:text="${i + 1}">1</a>
+            <li class="page-item"
+                th:classappend="${i == reviewsPage.number} ? 'active'"
+                th:each="i : ${#numbers.sequence(0, reviewsPage.totalPages - 1)}">
+                <a class="page-link"
+                   th:href="@{/products/{id}(id=${product.id}, page=${i})}"
+                   th:text="${i + 1}">1</a>
             </li>
-            <li class="page-item" th:classappend="${reviewsPage.isLast()} ? 'disabled'">
-                <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${reviewsPage.number + 1})}">Next</a>
+            <li class="page-item"
+                th:classappend="${reviewsPage.isLast()} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/products/{id}(id=${product.id}, page=${reviewsPage.number + 1})}">Next</a>
             </li>
         </ul>
     </nav>
+
+    <div th:replace="~{fragments/stock-quantity-form :: stock-quantity-script}"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('form[action$="/cart/add"]').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    const button = e.target.querySelector('button[type="submit"]');
+                    if (button) {
+                        button.disabled = true;
+                        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                    }
+                });
+            });
+        });
+    </script>
 </div>
 </body>
 </html>

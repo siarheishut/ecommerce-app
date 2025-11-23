@@ -40,9 +40,9 @@
                  data-bs-parent="#orderAccordion"
                  th:aria-labelledby="'heading' + ${iter.index}"
                  th:id="'collapse' + ${iter.index}">
-                <div class="accordion-body">
+                <div class="accordion-body overflow-x-auto">
                     <p><strong>Total Amount:</strong> <span
-                            th:text="${#numbers.formatCurrency(order.totalAmount)}">$0.00</span>
+                            th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">$0.00</span>
                     </p>
                     <table class="table table-sm">
                         <thead>
@@ -55,13 +55,16 @@
                         </thead>
                         <tbody>
                         <tr th:each="item : ${order.items}">
-                            <td th:text="${item.productName}">Product Name</td>
+                            <td>
+                                <a th:href="@{/products/{id}(id=${item.productId})}"
+                                   th:text="${item.productName}">Product Name</a>
+                            </td>
                             <td th:text="${item.productDescription}">Description</td>
                             <td class="text-center" th:text="${item.quantity}">
                                 1
                             </td>
                             <td class="text-end"
-                                th:text="${#numbers.formatCurrency(item.price)}">
+                                th:text="'$' + ${#numbers.formatDecimal(item.price, 1, 2)}">
                                 $0.00
                             </td>
                         </tr>

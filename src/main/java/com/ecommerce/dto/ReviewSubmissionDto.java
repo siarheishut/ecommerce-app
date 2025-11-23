@@ -2,6 +2,8 @@ package com.ecommerce.dto;
 
 import jakarta.validation.constraints.*;
 
+import java.io.Serializable;
+
 public record ReviewSubmissionDto(
     @NotNull(message = "Rating cannot be empty.")
     @Min(value = 1, message = "Rating must be at least 1.")
@@ -10,5 +12,5 @@ public record ReviewSubmissionDto(
 
     @Size(max = 1000, message = "Comment cannot exceed 1000 characters.")
     String comment
-) {
+) implements Serializable {
 }

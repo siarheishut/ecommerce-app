@@ -6,7 +6,7 @@
     <title>Shopping Cart</title>
 </head>
 <body>
-<div class="container content mt-5">
+<div class="content">
     <style>
         .no-spinners::-webkit-inner-spin-button,
         .no-spinners::-webkit-outer-spin-button {
@@ -18,6 +18,7 @@
             -moz-appearance: textfield;
         }
     </style>
+
     <h2>Your Shopping Cart</h2>
 
     <div class="alert alert-danger" role="alert" th:if="${errorMessage}"
@@ -30,90 +31,97 @@
     </div>
 
     <div th:if="${cart != null && !cart.items.isEmpty()}">
-        <table class="table table-hover">
-            <thead class="table-light">
-            <tr>
-                <th>Product</th>
-                <th class="text-end">Price</th>
-                <th class="text-center">Quantity</th>
-                <th class="text-end">Total</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="item : ${cart.items}">
-                <td th:text="${item.product.name}">Product Name</td>
-                <td class="text-end"
-                    th:text="${#numbers.formatCurrency(item.product.price == null ? 0 : item.product.price)}"></td>
-                <td class="text-center" style="min-width: 160px;">
-                    <form class="d-inline" method="post"
-                          th:action="@{/cart/update}">
-                        <input th:name="${_csrf.parameterName}"
-                               th:value="${_csrf.token}"
-                               type="hidden"/>
-                        <input name="_method" type="hidden" value="put">
-                        <input name="productId" th:value="${item.product.id}"
-                               type="hidden"/>
-                        <div class="input-group input-group-sm justify-content-center">
-                            <button class="btn btn-outline-secondary"
-                                    onclick="var input = this.nextElementSibling; input.stepDown(); input.dispatchEvent(new Event('change'));"
-                                    type="button">
-                                -
-                            </button>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th class="text-end">Price</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-end">Total</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${cart.items}">
+                        <td th:text="${item.product.name}">Product Name</td>
+                        <td class="text-end"
+                            th:text="'$' + ${#numbers.formatDecimal(item.product.price == null ? 0 : item.product.price, 1, 2)}"></td>
+                        <td class="text-center" style="min-width: 160px;">
+                            <form class="d-inline" method="post"
+                                  th:action="@{/cart/update}">
+                                <input th:name="${_csrf.parameterName}"
+                                       th:value="${_csrf.token}"
+                                       type="hidden"/>
+                                <input name="_method" type="hidden" value="put">
+                                <input name="productId"
+                                       th:value="${item.product.id}"
+                                       type="hidden"/>
+                                <div class="input-group input-group-sm justify-content-center">
+                                    <button class="btn btn-outline-secondary"
+                                            onclick="var input = this.nextElementSibling; input.stepDown(); input.dispatchEvent(new Event('change'));"
+                                            type="button">
+                                        -
+                                    </button>
 
-                            <input class="form-control text-center stock-quantity-input no-spinners"
-                                   min="1" name="quantity"
-                                   style="max-width: 60px;"
-                                   th:max="${item.product.stockQuantity}"
-                                   th:value="${item.quantity}"
-                                   type="number"/>
+                                    <input class="form-control text-center stock-quantity-input no-spinners"
+                                           min="1" name="quantity"
+                                           style="max-width: 60px;"
+                                           th:max="${item.product.stockQuantity()}"
+                                           th:value="${item.product.inCartQuantity()}"
+                                           type="number"/>
 
-                            <button class="btn btn-outline-secondary"
-                                    onclick="var input = this.previousElementSibling; input.stepUp(); input.dispatchEvent(new Event('change'));"
-                                    type="button">
-                                +
-                            </button>
-                        </div>
-                    </form>
-                </td>
-                <td class="text-end"
-                    th:text="${#numbers.formatCurrency(item.quantity * item.product.price)}"></td>
+                                    <button class="btn btn-outline-secondary"
+                                            onclick="var input = this.previousElementSibling; input.stepUp(); input.dispatchEvent(new Event('change'));"
+                                            type="button">
+                                        +
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+                        <td class="text-end"
+                            th:text="'$' + ${#numbers.formatDecimal(item.product.inCartQuantity() * item.product.price(), 1, 2)}"></td>
+                        <td class="text-center">
+                            <form method="post" th:action="@{/cart/remove}">
+                                <input th:name="${_csrf.parameterName}"
+                                       th:value="${_csrf.token}"
+                                       type="hidden"/>
+                                <input name="_method" type="hidden"
+                                       value="delete"/>
+                                <input name="productId"
+                                       th:value="${item.product.id}"
+                                       type="hidden"/>
+                                <button class="btn btn-danger btn-sm"
+                                        title="Remove item"
+                                        type="submit">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
 
-                <td class="text-center">
-                    <form method="post" th:action="@{/cart/remove}">
-                        <input th:name="${_csrf.parameterName}"
-                               th:value="${_csrf.token}"
-                               type="hidden"/>
-                        <input name="_method" type="hidden" value="delete"/>
-                        <input name="productId" th:value="${item.product.id}"
-                               type="hidden"/>
-                        <button class="btn btn-danger btn-sm"
-                                title="Remove item"
-                                type="submit">
-                            <i class="bi bi-trash-fill"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
+                    <tfoot>
+                    <tr>
+                        <td class="text-end fw-bold" colspan="4">Grand Total
+                        </td>
+                        <td class="text-end fw-bold"
+                            th:text="'$' + ${#numbers.formatDecimal(cart.totalAmount, 1, 2)}"></td>
+                    </tr>
+                    </tfoot>
+                </table>
 
-            <tfoot>
-            <tr>
-                <td class="text-end fw-bold" colspan="4">Grand Total</td>
-                <td class="text-end fw-bold"
-                    th:text="${#numbers.formatCurrency(cart.totalAmount)}"></td>
-            </tr>
-            </tfoot>
-        </table>
-
-        <div class="d-flex justify-content-between mt-4">
-            <a class="btn btn-secondary" th:href="@{/products/list}">Continue
-                Shopping</a>
-            <a class="btn btn-success btn-lg"
-               th:href="@{/orders/shipping-details}">
-                <i class="bi bi-truck"></i>
-                Delivery and payment
-            </a>
+                <div class="d-flex flex-wrap justify-content-between mt-4 gap-2">
+                    <a class="btn btn-secondary" th:href="@{/products/list}">Continue
+                        Shopping</a>
+                    <a class="btn btn-success btn-lg"
+                       th:href="@{/orders/shipping-details}">
+                        <i class="bi bi-truck"></i>
+                        Delivery and payment
+                    </a>
+                </div>
+            </table>
         </div>
     </div>
 

@@ -3,6 +3,7 @@ package com.ecommerce.service;
 import com.ecommerce.cart.CartSessionItem;
 import com.ecommerce.cart.ShoppingCart;
 import com.ecommerce.dto.OrderHistoryDto;
+import com.ecommerce.dto.ProductViewDto;
 import com.ecommerce.dto.ShippingDetailsDto;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.Product;
@@ -75,7 +76,8 @@ public class OrderServiceImplTest {
     when(product.getPrice()).thenReturn(new BigDecimal("25.00"));
     when(product.getStockQuantity()).thenReturn(5);
 
-    CartSessionItem cartItem = new CartSessionItem(product, 2);
+    ProductViewDto productDto = ProductViewDto.fromEntity(product, 2);
+    CartSessionItem cartItem = new CartSessionItem(productDto, 2);
 
     when(shoppingCart.getItems()).thenReturn(List.of(cartItem));
     when(userService.getCurrentUser()).thenReturn(null);
@@ -109,11 +111,12 @@ public class OrderServiceImplTest {
     User currentUser = new User();
 
     Product product = mock(Product.class);
-
-    CartSessionItem cartItem = new CartSessionItem(product, 1);
-
     when(product.getId()).thenReturn(1L);
     when(product.getStockQuantity()).thenReturn(10);
+
+    ProductViewDto productDto = ProductViewDto.fromEntity(product, 1);
+    CartSessionItem cartItem = new CartSessionItem(productDto, 1);
+
     when(shoppingCart.getItems()).thenReturn(List.of(cartItem));
     when(userService.getCurrentUser()).thenReturn(currentUser);
     when(productRepository.findAllById(any())).thenReturn(List.of(product));
@@ -148,9 +151,12 @@ public class OrderServiceImplTest {
   void whenPlaceOrderFromCart_withMissingProduct_throwsResourceNotFoundException() {
     ShippingDetailsDto shippingDto = new ShippingDetailsDto();
     Product productInCart = mock(Product.class);
-    CartSessionItem cartItem = new CartSessionItem(productInCart, 1);
 
     when(productInCart.getId()).thenReturn(1L);
+
+    ProductViewDto productDto = ProductViewDto.fromEntity(productInCart, 1);
+    CartSessionItem cartItem = new CartSessionItem(productDto, 1);
+
     when(userService.getCurrentUser()).thenReturn(null);
     when(shoppingCart.getItems()).thenReturn(List.of(cartItem));
     when(productRepository.findAllById(List.of(1L))).thenReturn(Collections.emptyList());

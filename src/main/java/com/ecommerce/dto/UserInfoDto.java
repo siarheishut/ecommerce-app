@@ -7,10 +7,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfoDto {
+public class UserInfoDto implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
+
   @Size(max = 50, message = "First name cannot be longer than 50 characters.")
   private String firstName;
 

@@ -21,127 +21,131 @@
                 type="button"></button>
     </div>
 
-    <div class="d-flex justify-content-between align-items-stretch mb-4 gap-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center mb-4 gap-3">
         <form class="flex-grow-1" method="get"
               th:action="@{/admin/products/list}">
             <div class="input-group">
-                <input class="form-control" name="keyword"
-                       placeholder="Search by name..."
-                       th:value="${keyword}" type="text">
-
-                <div class="dropdown">
-                    <button aria-expanded="false"
-                            class="btn btn-outline-secondary dropdown-toggle"
-                            data-bs-auto-close="outside"
-                            data-bs-toggle="dropdown" type="button">
-                        Categories
-                    </button>
-                    <div class="dropdown-menu p-2" style="min-width: 250px;">
-                        <div class="form-check"
-                             th:each="cat : ${allCategories}">
-                            <input class="form-check-input" name="categoryIds"
-                                   th:checked="${selectedCategoryIds.contains(cat.id)}"
-                                   th:id="'cat-' + ${cat.id}"
-                                   th:value="${cat.id}" type="checkbox">
-                            <label class="form-check-label"
-                                   th:for="'cat-' + ${cat.id}"
-                                   th:text="${cat.name}"></label>
-                        </div>
-                        <hr class="my-2">
-                        <div class="text-center">
-                            <a class="btn btn-link btn-sm p-0" href="#"
-                               id="clear-categories">Clear
-                                selection</a>
-                        </div>
-                    </div>
-                </div>
-
                 <select class="form-select" name="status"
-                        style="max-width: 150px;">
-                    <option th:selected="${status == 'all'}" value="all">
-                        All
+                        style="max-width: 110px;">
+                    <option th:selected="${status == 'all'}" value="all">All
                     </option>
                     <option th:selected="${status == 'active'}" value="active">
                         Active
                     </option>
                     <option th:selected="${status == 'deleted'}"
-                            value="deleted">
-                        Deleted
+                            value="deleted">Del
                     </option>
                 </select>
 
+                <input class="form-control" name="keyword"
+                       placeholder="Search..."
+                       th:value="${keyword}" type="text">
+
+                <button aria-expanded="false"
+                        class="btn btn-outline-secondary dropdown-toggle"
+                        data-bs-auto-close="outside"
+                        data-bs-toggle="dropdown" type="button">
+                    <span class="d-none d-sm-inline">Categories</span>
+                    <i class="bi bi-tags d-sm-none"></i>
+                </button>
+                <div class="dropdown-menu p-2" style="min-width: 250px;">
+                    <div class="form-check" th:each="cat : ${allCategories}">
+                        <input class="form-check-input" name="categoryIds"
+                               th:checked="${selectedCategoryIds.contains(cat.id)}"
+                               th:id="'cat-' + ${cat.id}"
+                               th:value="${cat.id}" type="checkbox">
+                        <label class="form-check-label"
+                               th:for="'cat-' + ${cat.id}"
+                               th:text="${cat.name}"></label>
+                    </div>
+                    <hr class="my-2">
+                    <div class="text-center">
+                        <a class="btn btn-link btn-sm p-0" href="#"
+                           id="clear-categories">Clear selection</a>
+                    </div>
+                </div>
+
                 <button class="btn btn-outline-secondary" type="submit">
                     <i class="bi bi-search"></i>
-                    Search
                 </button>
             </div>
         </form>
-        <div>
+
+        <div class="d-grid d-md-block">
             <a class="btn btn-primary" th:href="@{/admin/products/add}">
-                <i class="bi bi-plus-circle"></i> Add Product
+                <i class="bi bi-plus-circle"></i> <span
+                    class="d-md-none d-lg-inline">Add Product</span>
             </a>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead class="table-light">
-                <tr>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th class="text-end">Price</th>
-                    <th class="text-center">Stock</th>
-                    <th>Categories</th>
-                    <th class="text-end">Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:classappend="${product.isDeleted} ? 'table-secondary text-muted' : ''"
-                    th:each="product : ${products}">
-                    <td class="align-middle" th:text="${product.name}"></td>
-                    <td class="align-middle"
-                        th:text="${product.description}"></td>
-                    <td class="align-middle text-end"
-                        th:text="${#numbers.formatCurrency(product.price)}"></td>
-                    <td class="align-middle text-center"
-                        th:text="${product.stockQuantity}"></td>
-                    <td class="align-middle"
-                        th:text="${product.categoriesString}"></td>
-                    <td>
-                        <div class="d-flex gap-2 justify-content-end">
-                            <a class="btn btn-info btn-sm"
-                               th:classappend="${product.isDeleted} ? 'disabled' : ''"
-                               th:disabled="${product.isDeleted}"
-                               th:href="@{/admin/products/edit/{id}(id=${product.id})}">
-                                <i class="bi bi-pencil-fill"></i>Update</a>
-                            <div th:switch="${product.isDeleted}">
-                                <form th:action="@{/admin/products/delete/{id}(id=${product.id})}"
-                                      th:case="false"
-                                      th:method="delete">
-                                    <button class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Are you sure you want to delete this product?')"
-                                            type="submit">
-                                        <i class="bi bi-trash-fill"></i>
-                                        Delete
-                                    </button>
-                                </form>
-                                <form th:action="@{/admin/products/restore/{id}(id=${product.id})}"
-                                      th:case="true"
-                                      th:method="post">
-                                    <button class="btn btn-warning btn-sm"
-                                            onclick="return confirm('Are you sure you want to restore this product?')"
-                                            type="submit">
-                                        <i class="bi bi-arrow-counterclockwise"></i>
-                                        Restore
-                                    </button>
-                                </form>
+    <div class="card shadow-sm mb-5">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light text-nowrap">
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th class="text-end">Price</th>
+                        <th class="text-center">Stock</th>
+                        <th>Categories</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:classappend="${product.isDeleted} ? 'table-secondary text-muted' : ''"
+                        th:each="product : ${products}">
+
+                        <td class="fw-semibold" th:text="${product.name}"></td>
+                        <td class="text-truncate" style="max-width: 150px;"
+                            th:text="${product.description}"
+                            th:title="${product.description}"></td>
+                        <td class="text-end text-nowrap"
+                            th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}"></td>
+                        <td class="text-center"
+                            th:text="${product.stockQuantity}"></td>
+                        <td class="text-truncate" style="max-width: 120px;"
+                            th:text="${product.categoriesString}"
+                            th:title="${product.categoriesString}"></td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a class="btn btn-info btn-sm text-white"
+                                   th:classappend="${product.isDeleted} ? 'disabled' : ''"
+                                   th:disabled="${product.isDeleted}"
+                                   th:href="@{/admin/products/edit/{id}(id=${product.id})}"
+                                   title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+
+                                <div th:switch="${product.isDeleted}">
+                                    <form th:action="@{/admin/products/delete/{id}(id=${product.id})}"
+                                          th:case="false"
+                                          th:method="delete">
+                                        <button class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Are you sure?')"
+                                                title="Delete"
+                                                type="submit">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/admin/products/restore/{id}(id=${product.id})}"
+                                          th:case="true"
+                                          th:method="post">
+                                        <button class="btn btn-warning btn-sm text-white"
+                                                onclick="return confirm('Restore this product?')"
+                                                title="Restore"
+                                                type="submit">
+                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

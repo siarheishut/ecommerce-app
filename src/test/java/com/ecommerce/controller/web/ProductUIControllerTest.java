@@ -1,6 +1,9 @@
 package com.ecommerce.controller.web;
 
+import com.ecommerce.cart.ShoppingCart;
 import com.ecommerce.config.StringToCategoryConverter;
+import com.ecommerce.dto.ProductViewDto;
+import com.ecommerce.dto.ReviewDto;
 import com.ecommerce.entity.Category;
 import com.ecommerce.entity.Product;
 import com.ecommerce.security.CustomAccessDeniedHandler;
@@ -28,6 +31,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -62,6 +66,9 @@ public class ProductUIControllerTest {
   @MockitoBean
   private StringToCategoryConverter stringToCategoryConverter;
 
+  @MockitoBean
+  private ShoppingCart shoppingCart;
+
   @Test
   void showProductList_whenCalled_returnsProductListPage() throws Exception {
     Page<Product> productPage = new PageImpl<>(Collections.singletonList(new Product()));
@@ -70,12 +77,13 @@ public class ProductUIControllerTest {
     when(productService.searchProducts(any(), any(), any(), any(), any(), any(Pageable.class)))
         .thenReturn(productPage);
     when(categoryService.findAllSortedByName()).thenReturn(categories);
+    when(shoppingCart.getItems()).thenReturn(Collections.emptyList());
 
     mockMvc.perform(get("/products/list"))
         .andExpect(status().isOk())
         .andExpect(view().name("public/products-list"))
         .andExpect(model().attributeExists("productPage", "categories", "returnUrl"))
-        .andExpect(model().attribute("productPage", productPage))
+        .andExpect(model().attribute("productPage", instanceOf(Page.class)))
         .andExpect(model().attribute("categories", categories));
   }
 
@@ -86,6 +94,7 @@ public class ProductUIControllerTest {
     when(productService.searchProducts(
         anyString(), anyList(), anyDouble(), anyDouble(), anyBoolean(), any(Pageable.class)))
         .thenReturn(productPage);
+    when(shoppingCart.getItems()).thenReturn(Collections.emptyList());
     when(categoryService.findAllSortedByName()).thenReturn(Collections.emptyList());
 
     mockMvc.perform(get("/products/list")
@@ -117,17 +126,18 @@ public class ProductUIControllerTest {
   @Test
   void productDetail_whenProductExists_returnsDetailPage() throws Exception {
     Product product = new Product();
-    Page<com.ecommerce.dto.ReviewDto> reviewsPage = new PageImpl<>(Collections.emptyList());
+    Page<ReviewDto> reviewsPage = new PageImpl<>(Collections.emptyList());
 
     when(productService.findById(1L)).thenReturn(Optional.of(product));
     when(reviewService.getReviewsForProduct(any(Long.class), any(Pageable.class)))
         .thenReturn(reviewsPage);
+    when(shoppingCart.getItems()).thenReturn(Collections.emptyList());
 
     mockMvc.perform(get("/products/1"))
         .andExpect(status().isOk())
         .andExpect(view().name("public/product-detail"))
-        .andExpect(model().attributeExists("product", "reviewsPage", "newReview"))
-        .andExpect(model().attribute("product", product));
+        .andExpect(model().attributeExists("product", "reviewsPage", "newReview", "returnUrl"))
+        .andExpect(model().attribute("product", instanceOf(ProductViewDto.class)));
   }
 
   @Test
