@@ -1,10 +1,6 @@
 package com.ecommerce.service;
 
-import com.ecommerce.cart.CartSessionItem;
-import com.ecommerce.cart.ShoppingCart;
-import com.ecommerce.dto.OrderHistoryDto;
-import com.ecommerce.dto.ProductViewDto;
-import com.ecommerce.dto.ShippingDetailsDto;
+import com.ecommerce.dto.*;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.Product;
 import com.ecommerce.entity.User;
@@ -38,7 +34,7 @@ public class OrderServiceImplTest {
   @Mock
   private ProductRepository productRepository;
   @Mock
-  private ShoppingCart shoppingCart;
+  private CartService cartService;
   @Mock
   private UserService userService;
   @Mock
@@ -77,11 +73,11 @@ public class OrderServiceImplTest {
     when(product.getStockQuantity()).thenReturn(5);
 
     ProductViewDto productDto = ProductViewDto.fromEntity(product, 2);
-    CartSessionItem cartItem = new CartSessionItem(productDto, 2);
+    CartItemViewDto cartItemView = new CartItemViewDto(productDto);
+    CartViewDto cartView = new CartViewDto(List.of(cartItemView), new BigDecimal("50.00"));
 
-    when(shoppingCart.getItems()).thenReturn(List.of(cartItem));
+    when(cartService.getCartForCurrentUser()).thenReturn(cartView);
     when(userService.getCurrentUser()).thenReturn(null);
-    when(shoppingCart.getTotalAmount()).thenReturn(new BigDecimal("50.00"));
     when(productRepository.findAllById(List.of(1L))).thenReturn(List.of(product));
 
     orderService.placeOrder(shippingDto);
@@ -95,11 +91,11 @@ public class OrderServiceImplTest {
     assertThat(savedOrder.getShippingDetails().getFirstName()).isEqualTo("Tom");
     assertThat(savedOrder.getOrderItems()).hasSize(1);
     assertThat(savedOrder.getOrderItems().getFirst().getQuantity()).isEqualTo(2);
-    verify(product).setStockQuantity(3);
 
+    verify(product).setStockQuantity(3);
     verify(productRepository).saveAll(productListCaptor.capture());
 
-    verify(shoppingCart).clear();
+    verify(cartService).removeItem(1L);
     verify(emailService).sendOrderConfirmationEmail(savedOrder);
   }
 
@@ -115,9 +111,10 @@ public class OrderServiceImplTest {
     when(product.getStockQuantity()).thenReturn(10);
 
     ProductViewDto productDto = ProductViewDto.fromEntity(product, 1);
-    CartSessionItem cartItem = new CartSessionItem(productDto, 1);
+    CartItemViewDto cartItemView = new CartItemViewDto(productDto);
+    CartViewDto cartView = new CartViewDto(List.of(cartItemView), new BigDecimal("25.00"));
 
-    when(shoppingCart.getItems()).thenReturn(List.of(cartItem));
+    when(cartService.getCartForCurrentUser()).thenReturn(cartView);
     when(userService.getCurrentUser()).thenReturn(currentUser);
     when(productRepository.findAllById(any())).thenReturn(List.of(product));
 
@@ -130,13 +127,15 @@ public class OrderServiceImplTest {
     assertThat(savedOrder.getShippingDetails().getFirstName()).isEqualTo("Tom");
     verify(product).setStockQuantity(9);
 
-    verify(shoppingCart).clear();
+    verify(cartService).removeItem(1L);
     verify(emailService).sendOrderConfirmationEmail(savedOrder);
   }
 
   @Test
   void whenPlaceOrderFromCart_withEmptyCart_throwsEmptyCartOrderException() {
-    when(shoppingCart.getItems()).thenReturn(Collections.emptyList());
+    when(cartService.getCartForCurrentUser())
+        .thenReturn(new CartViewDto(Collections.emptyList(), BigDecimal.ZERO));
+
     ShippingDetailsDto shippingDto = new ShippingDetailsDto();
 
     EmptyCartOrderException exception = assertThrows(
@@ -150,15 +149,16 @@ public class OrderServiceImplTest {
   @Test
   void whenPlaceOrderFromCart_withMissingProduct_throwsResourceNotFoundException() {
     ShippingDetailsDto shippingDto = new ShippingDetailsDto();
+
     Product productInCart = mock(Product.class);
-
     when(productInCart.getId()).thenReturn(1L);
-
     ProductViewDto productDto = ProductViewDto.fromEntity(productInCart, 1);
-    CartSessionItem cartItem = new CartSessionItem(productDto, 1);
+    CartItemViewDto cartItemView = new CartItemViewDto(productDto);
+    CartViewDto cartView = new CartViewDto(List.of(cartItemView), BigDecimal.TEN);
 
+    when(cartService.getCartForCurrentUser()).thenReturn(cartView);
     when(userService.getCurrentUser()).thenReturn(null);
-    when(shoppingCart.getItems()).thenReturn(List.of(cartItem));
+
     when(productRepository.findAllById(List.of(1L))).thenReturn(Collections.emptyList());
 
     ResourceNotFoundException exception = assertThrows(
