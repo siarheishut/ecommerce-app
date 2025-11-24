@@ -13,6 +13,7 @@ import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.repository.CartRepository;
 import com.ecommerce.repository.ProductRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -174,6 +175,14 @@ public class CartServiceImpl implements CartService {
 
   private CartViewDto getDbCartView(User user) {
     Cart cart = cartRepository.findByUser(user).orElse(new Cart());
+    if (cart.getItems().isEmpty()) {
+      return new CartViewDto(Collections.emptyList(), BigDecimal.ZERO);
+    }
+
+    boolean removed = cart.getItems().removeIf(item -> !isProductValid(item));
+    if (removed) {
+      cartRepository.save(cart);
+    }
 
     if (cart.getItems().isEmpty()) {
       return new CartViewDto(Collections.emptyList(), BigDecimal.ZERO);
@@ -187,7 +196,6 @@ public class CartServiceImpl implements CartService {
     BigDecimal totalAmount = detailedItems.stream()
         .map(item -> item.product().price().multiply(new BigDecimal(item.product().inCartQuantity())))
         .reduce(BigDecimal.ZERO, BigDecimal::add);
-
     return new CartViewDto(detailedItems, totalAmount);
   }
 
@@ -206,35 +214,49 @@ public class CartServiceImpl implements CartService {
   }
 
   private CartViewDto getSessionCartView() {
+    if (sessionCart.getItems().isEmpty()) {
+      return new CartViewDto(Collections.emptyList(), BigDecimal.ZERO);
+    }
     List<Long> productIds = sessionCart.getItems().stream()
         .map(item -> item.product().id())
         .collect(Collectors.toList());
 
-    if (productIds.isEmpty()) {
-      return new CartViewDto(Collections.emptyList(), BigDecimal.ZERO);
-    }
-
     Map<Long, Product> productMap = productRepository.findAllById(productIds).stream()
         .collect(Collectors.toMap(Product::getId, Function.identity()));
 
-    List<CartItemViewDto> detailedItems = sessionCart.getItems().stream()
-        .map(cartItem -> {
-          Product product = productMap.get(cartItem.product().id());
-          if (product == null) return null;
-          return new CartItemViewDto(ProductViewDto.fromEntity(product, cartItem.quantity()));
-        })
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+    List<Long> itemsToRemove = new ArrayList<>();
+    List<CartItemViewDto> detailedItems = new ArrayList<>();
+    for (CartSessionItem sessionItem : sessionCart.getItems()) {
+      Product product = productMap.get(sessionItem.product().id());
 
+      if (product == null || product.isDeleted()) {
+        itemsToRemove.add(sessionItem.product().id());
+      } else {
+        detailedItems.add(new CartItemViewDto(
+            ProductViewDto.fromEntity(product, sessionItem.quantity())));
+      }
+    }
+
+    itemsToRemove.forEach(sessionCart::removeItem);
+    if (detailedItems.isEmpty()) {
+      return new CartViewDto(Collections.emptyList(), BigDecimal.ZERO);
+    }
     BigDecimal totalAmount = detailedItems.stream()
         .map(item -> item.product().price().multiply(new BigDecimal(item.product().inCartQuantity())))
         .reduce(BigDecimal.ZERO, BigDecimal::add);
-
     return new CartViewDto(detailedItems, totalAmount);
   }
 
   private Product getProductOrThrow(Long productId) {
     return productRepository.findById(productId)
         .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + productId + " not found."));
+  }
+
+  private boolean isProductValid(CartItem item) {
+    try {
+      return item.getProduct() != null && !item.getProduct().isDeleted();
+    } catch (EntityNotFoundException e) {
+      return false;
+    }
   }
 }

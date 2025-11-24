@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"
+      th:replace="~{fragments/main-layout :: main-layout(~{::title}, ~{::.content})}"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Account</title>
+</head>
+<body>
+
+<div class="content container mt-5">
+    <h2>My Account</h2>
+    <hr>
+
+    <div class="card border-danger mb-4" sec:authorize="hasRole('ADMIN')">
+        <div class="card-header bg-danger text-white">Admin Panel</div>
+        <div class="card-body">
+            <h5 class="card-title">Management Pages</h5>
+            <p class="card-text">Access administrative sections to manage the
+                store.</p>
+            <div class="d-flex gap-2">
+                <a class="btn btn-danger" th:href="@{/admin/products/list}">Manage
+                    Products</a>
+                <a class="btn btn-danger" th:href="@{/admin/categories/list}">Manage
+                    Categories</a>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">Actions</div>
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action"
+                            data-bs-target="#addressesModal"
+                            data-bs-toggle="modal" type="button">
+                        <i class="bi bi-geo-alt"></i> Manage Addresses
+                    </button>
+                    <button class="list-group-item list-group-item-action"
+                            data-bs-target="#userInfoModal"
+                            data-bs-toggle="modal" type="button">
+                        <i class="bi bi-person-lines-fill"></i> Update Personal
+                        Info
+                    </button>
+                    <a class="list-group-item list-group-item-action"
+                       th:href="@{/orders/history}">
+                        <i class="bi bi-clock-history"></i> Order History
+                    </a>
+                    <a class="list-group-item list-group-item-action"
+                       th:href="@{/change-password}">
+                        <i class="bi bi-key"></i> Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card border-secondary mb-3">
+                <div class="card-header">Profile Details</div>
+                <div class="card-body text-secondary">
+                    <p class="card-text">
+                        <strong>Username:</strong> <span
+                            sec:authentication="name"></span><br>
+                        <strong>Roles:</strong> <span
+                            sec:authentication="principal.authorities"></span>
+                        <br>
+                        <strong>First Name:</strong> <span
+                            th:text="${userInfo.firstName}"></span><br>
+                        <strong>Last Name:</strong> <span
+                            th:text="${userInfo.lastName}"></span><br>
+                        <strong>Email:</strong> <span
+                            th:text="${userInfo.getEmail()}"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:insert="~{fragments/address-modal :: address-modals}"></div>
+    <div th:insert="~{fragments/user-info-modal :: user-info-modal}"></div>
+
+    <!-- Lazy Loading for Modals -->
+    <script sec:authorize="isAuthenticated()" th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const modals = {
+                'addressesModal': {
+                    url: '/fragments/addresses',
+                    contentSelector: '#addressesModalContent'
+                },
+                'userInfoModal': {
+                    url: '/fragments/user-info',
+                    contentSelector: '#userInfoModalContent'
+                }
+            };
+
+            // --- Lazy Loading Logic ---
+            Object.keys(modals).forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    modalElement.addEventListener('show.bs.modal', async function (event) {
+                        const config = modals[modalId];
+                        const contentDiv = modalElement.querySelector(config.contentSelector);
+                        if (contentDiv && contentDiv.getAttribute('data-loaded') !== 'true') {
+                            try {
+                                const response = await fetch(config.url);
+                                contentDiv.innerHTML = await response.text();
+                                contentDiv.setAttribute('data-loaded', 'true');
+
+                                if (modalId === 'addressesModal') {
+                                    initializeAddressButtons();
+                                }
+                            } catch (error) {
+                                contentDiv.innerHTML = '<div class="alert alert-danger">Could not load content. Please try again.</div>';
+                            }
+                        }
+                    });
+                }
+            });
+
+            // --- Address Form ---
+            const addressFormModalEl = document.getElementById('addressFormModal');
+            const addressFormModal = addressFormModalEl ? new bootstrap.Modal(addressFormModalEl) : null;
+            const addressForm = document.getElementById('addressForm');
+
+            function initializeAddressButtons() {
+                document.querySelectorAll('.add-address-btn').forEach(button => {
+                    button.addEventListener('click', function () {
+                        if (!addressForm) return;
+                        addressForm.reset();
+                        addressForm.querySelector('[name="id"]').value = '';
+                        document.getElementById('addressFormModalLabel').innerText = 'Add New Address';
+                        addressFormModal.show();
+                    });
+                });
+
+                document.querySelectorAll('.edit-address-btn').forEach(button => {
+                    button.addEventListener('click', function () {
+                        if (!addressForm) return;
+                        const data = this.dataset;
+                        addressForm.querySelector('[name="id"]').value = data.addressId;
+                        addressForm.querySelector('[name="name"]').value = data.addressName;
+                        addressForm.querySelector('[name="addressLine"]').value = data.addressLine;
+                        addressForm.querySelector('[name="city"]').value = data.addressCity;
+                        addressForm.querySelector('[name="postalCode"]').value = data.addressPostal;
+                        addressForm.querySelector('[name="country"]').value = data.addressCountry;
+                        document.getElementById('addressFormModalLabel').innerText = 'Edit Address';
+                        addressFormModal.show();
+                    });
+                });
+            }
+
+            // --- Re-open modals after form submission ---
+            const openAddressModal = /*[[${openAddressModal}]]*/ false;
+            const addressSuccess = /*[[${addressSuccess}]]*/ null;
+            const addressError = /*[[${addressError}]]*/ null;
+            if (openAddressModal) {
+                if (addressFormModal) addressFormModal.show();
+            } else if (addressSuccess != null || addressError != null) {
+                const addressesModalEl = document.getElementById('addressesModal');
+                if (addressesModalEl) new bootstrap.Modal(addressesModalEl).show();
+            }
+
+            const openUserInfoModal = /*[[${openUserInfoModal}]]*/ false;
+            const userInfoSuccess = /*[[${userInfoSuccess}]]*/ null;
+            if (openUserInfoModal || userInfoSuccess) {
+                const userInfoModalEl = document.getElementById('userInfoModal');
+                if (userInfoModalEl) new bootstrap.Modal(userInfoModalEl).show();
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

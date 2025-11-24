@@ -1,7 +1,6 @@
 package com.ecommerce.controller.web;
 
 import com.ecommerce.config.StringToCategoryConverter;
-import com.ecommerce.dto.UserInfoDto;
 import com.ecommerce.security.CustomAccessDeniedHandler;
 import com.ecommerce.security.CustomAuthenticationSuccessHandler;
 import com.ecommerce.security.JpaUserDetailsService;
@@ -15,9 +14,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @Import(SecurityConfig.class)
 @WebMvcTest(HomeController.class)
@@ -43,20 +42,16 @@ public class HomeControllerTest {
 
   @Test
   @WithMockUser
-  void whenHomePage_asUnauthenticatedUser_returnsIndexViewWithDefaultUserInfo() throws Exception {
+  void whenHomePage_returnsLandingPage() throws Exception {
     mockMvc.perform(get("/"))
         .andExpect(status().isOk())
-        .andExpect(view().name("public/index"))
-        .andExpect(model().attributeExists("address"))
-        .andExpect(model().attribute("userInfo", is(new UserInfoDto())));
+        .andExpect(view().name("public/index"));
   }
 
   @Test
-  @WithMockUser(username = "testuser")
-  void whenHomePage_asAuthenticatedUser_returnsIndexViewWithUserInfo() throws Exception {
+  void whenHomePage_asAnonymous_returnsLandingPage() throws Exception {
     mockMvc.perform(get("/"))
         .andExpect(status().isOk())
-        .andExpect(view().name("public/index"))
-        .andExpect(model().attributeExists("address"));
+        .andExpect(view().name("public/index"));
   }
 }
