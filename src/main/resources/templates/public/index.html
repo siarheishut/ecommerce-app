@@ -43,10 +43,6 @@
                         data-bs-toggle="modal" sec:authorize="isAuthenticated()"
                         type="button">Update User Info
                 </button>
-                <a class="btn btn-secondary btn-lg" role="button"
-                   sec:authorize="isAuthenticated()"
-                   th:href="@{/orders/history}">Order History
-                </a>
                 <a class="btn btn-outline-secondary btn-lg" role="button"
                    sec:authorize="isAuthenticated()"
                    th:href="@{/change-password}">Change Password
@@ -60,10 +56,13 @@
         <div class="card-header bg-danger text-white">Admin Panel</div>
         <div class="card-body">
             <h5 class="card-title">Management Pages</h5>
-            <p class="card-text">Access administrative sections to manage the store.</p>
+            <p class="card-text">Access administrative sections to manage the
+                store.</p>
             <div class="d-flex gap-2">
-                <a class="btn btn-danger" th:href="@{/admin/products/list}">Manage Products</a>
-                <a class="btn btn-danger" th:href="@{/admin/categories/list}">Manage Categories</a>
+                <a class="btn btn-danger" th:href="@{/admin/products/list}">Manage
+                    Products</a>
+                <a class="btn btn-danger" th:href="@{/admin/categories/list}">Manage
+                    Categories</a>
             </div>
         </div>
     </div>
