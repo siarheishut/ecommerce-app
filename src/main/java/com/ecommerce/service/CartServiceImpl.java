@@ -180,6 +180,7 @@ public class CartServiceImpl implements CartService {
     }
 
     List<CartItemViewDto> detailedItems = cart.getItems().stream()
+        .filter(item -> item.getProduct() != null && !item.getProduct().isDeleted())
         .map(item -> new CartItemViewDto(
             ProductViewDto.fromEntity(item.getProduct(), item.getQuantity())))
         .collect(Collectors.toList());
@@ -220,7 +221,7 @@ public class CartServiceImpl implements CartService {
     List<CartItemViewDto> detailedItems = sessionCart.getItems().stream()
         .map(cartItem -> {
           Product product = productMap.get(cartItem.product().id());
-          if (product == null) return null;
+          if (product == null || product.isDeleted()) return null;
           return new CartItemViewDto(ProductViewDto.fromEntity(product, cartItem.quantity()));
         })
         .filter(Objects::nonNull)

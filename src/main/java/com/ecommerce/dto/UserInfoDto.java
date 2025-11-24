@@ -1,6 +1,7 @@
 package com.ecommerce.dto;
 
 import com.ecommerce.entity.User;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -27,7 +28,11 @@ public class UserInfoDto implements Serializable {
   @Pattern(regexp = "^$|^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$", message = "Please enter a valid phone number.")
   private String phoneNumber;
 
+  @Email(message = "Please provide a valid email address.")
+  private String email;
+
   static public UserInfoDto fromEntity(User user) {
-    return new UserInfoDto(user.getFirstName(), user.getLastName(), user.getPhoneNumber());
+    return new UserInfoDto(
+        user.getFirstName(), user.getLastName(), user.getPhoneNumber(), user.getEmail());
   }
 }
