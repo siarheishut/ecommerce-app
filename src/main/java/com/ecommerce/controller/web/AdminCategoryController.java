@@ -5,6 +5,7 @@ import com.ecommerce.entity.Category;
 import com.ecommerce.exception.CategoryInUseException;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.service.CategoryService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +92,9 @@ public class AdminCategoryController {
   }
 
   @DeleteMapping("/delete/{id}")
-  public String deleteCategories(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+  public String deleteCategories(@PathVariable Long id,
+                                 RedirectAttributes redirectAttributes,
+                                 HttpServletRequest request) {
     try {
       categoryService.deleteById(id);
       redirectAttributes.addFlashAttribute("successMessage", "Category deleted successfully.");
@@ -106,11 +109,14 @@ public class AdminCategoryController {
       redirectAttributes.addFlashAttribute(
           "errorMessage", "An error occurred while deleting the category.");
     }
-    return "redirect:/admin/categories/list";
+    String referer = request.getHeader("Referer");
+    return "redirect:" + (referer != null ? referer : "/admin/categories/list");
   }
 
   @PostMapping("/restore/{id}")
-  public String restoreCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+  public String restoreCategory(@PathVariable Long id,
+                                RedirectAttributes redirectAttributes,
+                                HttpServletRequest request) {
     try {
       categoryService.restoreById(id);
       redirectAttributes.addFlashAttribute("successMessage", "Category restored successfully.");
@@ -125,6 +131,7 @@ public class AdminCategoryController {
       redirectAttributes.addFlashAttribute(
           "errorMessage", "An error occurred while restoring the category.");
     }
-    return "redirect:/admin/categories/list";
+    String referer = request.getHeader("Referer");
+    return "redirect:" + (referer != null ? referer : "/admin/categories/list");
   }
 }

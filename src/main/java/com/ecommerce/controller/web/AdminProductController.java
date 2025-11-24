@@ -6,6 +6,7 @@ import com.ecommerce.entity.Product;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.service.CategoryService;
 import com.ecommerce.service.ProductService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,7 +101,9 @@ public class AdminProductController {
   }
 
   @DeleteMapping("/delete/{id}")
-  public String deleteProducts(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+  public String deleteProducts(@PathVariable Long id,
+                               RedirectAttributes redirectAttributes,
+                               HttpServletRequest request) {
     try {
       productService.deleteById(id);
       log.info("Admin deleted product with id: {}", id);
@@ -113,11 +116,14 @@ public class AdminProductController {
       redirectAttributes.addFlashAttribute(
           "errorMessage", "An error occurred while deleting the product.");
     }
-    return "redirect:/admin/products/list";
+    String referer = request.getHeader("Referer");
+    return "redirect:" + (referer != null ? referer : "/admin/products/list");
   }
 
   @PostMapping("/restore/{id}")
-  public String restoreProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+  public String restoreProduct(@PathVariable Long id,
+                               RedirectAttributes redirectAttributes,
+                               HttpServletRequest request) {
     try {
       productService.restoreById(id);
       log.info("Admin restored product with id: {}", id);
@@ -130,6 +136,7 @@ public class AdminProductController {
       redirectAttributes.addFlashAttribute(
           "errorMessage", "An error occurred while restoring the product.");
     }
-    return "redirect:/admin/products/list";
+    String referer = request.getHeader("Referer");
+    return "redirect:" + (referer != null ? referer : "/admin/products/list");
   }
 }

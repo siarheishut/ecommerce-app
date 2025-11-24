@@ -45,7 +45,10 @@
                 <tbody>
                 <tr th:each="item : ${cart.items}"
                     th:id="'cart-item-row-' + ${item.product.id}">
-                    <td th:text="${item.product.name}">Product Name</td>
+                    <td>
+                        <a th:href="@{/products/{id}(id=${item.product.id()})}"
+                           th:text="${item.product.name}">Product Name</a>
+                    </td>
                     <td class="text-end"
                         th:text="'$' + ${#numbers.formatDecimal(item.product.price == null ? 0 : item.product.price, 1, 2)}"></td>
                     <td class="text-center" style="min-width: 160px;">
