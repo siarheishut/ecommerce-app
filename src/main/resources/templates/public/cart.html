@@ -33,128 +33,236 @@
     <div th:if="${cart != null && !cart.items.isEmpty()}">
         <div class="table-responsive">
             <table class="table table-hover">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                    <tr>
-                        <th>Product</th>
-                        <th class="text-end">Price</th>
-                        <th class="text-center">Quantity</th>
-                        <th class="text-end">Total</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="item : ${cart.items}">
-                        <td th:text="${item.product.name}">Product Name</td>
-                        <td class="text-end"
-                            th:text="'$' + ${#numbers.formatDecimal(item.product.price == null ? 0 : item.product.price, 1, 2)}"></td>
-                        <td class="text-center" style="min-width: 160px;">
-                            <form class="d-inline" method="post"
-                                  th:action="@{/cart/update}">
-                                <input th:name="${_csrf.parameterName}"
-                                       th:value="${_csrf.token}"
-                                       type="hidden"/>
-                                <input name="_method" type="hidden" value="put">
-                                <input name="productId"
-                                       th:value="${item.product.id}"
-                                       type="hidden"/>
-                                <div class="input-group input-group-sm justify-content-center">
-                                    <button class="btn btn-outline-secondary"
-                                            onclick="var input = this.nextElementSibling; input.stepDown(); input.dispatchEvent(new Event('change'));"
-                                            type="button">
-                                        -
-                                    </button>
-
-                                    <input class="form-control text-center stock-quantity-input no-spinners"
-                                           min="1" name="quantity"
-                                           style="max-width: 60px;"
-                                           th:max="${item.product.stockQuantity()}"
-                                           th:value="${item.product.inCartQuantity()}"
-                                           type="number"/>
-
-                                    <button class="btn btn-outline-secondary"
-                                            onclick="var input = this.previousElementSibling; input.stepUp(); input.dispatchEvent(new Event('change'));"
-                                            type="button">
-                                        +
-                                    </button>
-                                </div>
-                            </form>
-                        </td>
-                        <td class="text-end"
-                            th:text="'$' + ${#numbers.formatDecimal(item.product.inCartQuantity() * item.product.price(), 1, 2)}"></td>
-                        <td class="text-center">
-                            <form method="post" th:action="@{/cart/remove}">
-                                <input th:name="${_csrf.parameterName}"
-                                       th:value="${_csrf.token}"
-                                       type="hidden"/>
-                                <input name="_method" type="hidden"
-                                       value="delete"/>
-                                <input name="productId"
-                                       th:value="${item.product.id}"
-                                       type="hidden"/>
-                                <button class="btn btn-danger btn-sm"
-                                        title="Remove item"
-                                        type="submit">
-                                    <i class="bi bi-trash-fill"></i>
+                <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th class="text-end">Price</th>
+                    <th class="text-center">Quantity</th>
+                    <th class="text-end">Total</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${cart.items}"
+                    th:id="'cart-item-row-' + ${item.product.id}">
+                    <td th:text="${item.product.name}">Product Name</td>
+                    <td class="text-end"
+                        th:text="'$' + ${#numbers.formatDecimal(item.product.price == null ? 0 : item.product.price, 1, 2)}"></td>
+                    <td class="text-center" style="min-width: 160px;">
+                        <form class="d-inline" method="post"
+                              th:action="@{/cart/update}">
+                            <input th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}"
+                                   type="hidden"/>
+                            <input name="_method" type="hidden" value="put">
+                            <input name="productId"
+                                   th:value="${item.product.id}"
+                                   type="hidden"/>
+                            <div class="input-group input-group-sm justify-content-center">
+                                <button class="btn btn-outline-secondary"
+                                        type="button"> -
                                 </button>
-                            </form>
-                        </td>
-                    </tr>
-                    </tbody>
 
-                    <tfoot>
-                    <tr>
-                        <td class="text-end fw-bold" colspan="4">Grand Total
-                        </td>
-                        <td class="text-end fw-bold"
-                            th:text="'$' + ${#numbers.formatDecimal(cart.totalAmount, 1, 2)}"></td>
-                    </tr>
-                    </tfoot>
-                </table>
+                                <input class="form-control text-center stock-quantity-input no-spinners"
+                                       min="1" name="quantity"
+                                       style="max-width: 60px;"
+                                       th:max="${item.product.stockQuantity()}"
+                                       th:value="${item.product.inCartQuantity()}"
+                                       type="number"/>
 
-                <div class="d-flex flex-wrap justify-content-between mt-4 gap-2">
-                    <a class="btn btn-secondary" th:href="@{/products/list}">Continue
-                        Shopping</a>
-                    <a class="btn btn-success btn-lg"
-                       th:href="@{/orders/shipping-details}">
-                        <i class="bi bi-truck"></i>
-                        Delivery and payment
-                    </a>
-                </div>
+                                <button class="btn btn-outline-secondary"
+                                        type="button"> +
+                                </button>
+                            </div>
+                        </form>
+                    </td>
+                    <td class="text-end"
+                        th:id="'item-total-' + ${item.product.id}"
+                        th:text="'$' + ${#numbers.formatDecimal(item.product.inCartQuantity() * item.product.price(), 1, 2)}"></td>
+                    <td class="text-center">
+                        <form method="post" th:action="@{/cart/remove}">
+                            <input th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}"
+                                   type="hidden"/>
+                            <input name="_method" type="hidden"
+                                   value="delete"/>
+                            <input name="productId"
+                                   th:value="${item.product.id}"
+                                   type="hidden"/>
+                            <button class="btn btn-danger btn-sm"
+                                    title="Remove item"
+                                    type="submit">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+
+                <tfoot>
+                <tr>
+                    <td class="text-end fw-bold" colspan="4">Grand Total
+                    </td>
+                    <td class="text-end fw-bold"
+                        id="grand-total"
+                        th:text="'$' + ${#numbers.formatDecimal(cart.totalAmount, 1, 2)}"></td>
+                </tr>
+                </tfoot>
             </table>
+
+            <div class="d-flex flex-wrap justify-content-between mt-4 gap-2">
+                <a class="btn btn-secondary" th:href="@{/products/list}">Continue
+                    Shopping</a>
+                <a class="btn btn-success btn-lg"
+                   th:href="@{/orders/shipping-details}">
+                    <i class="bi bi-truck"></i>
+                    Delivery and payment
+                </a>
+            </div>
         </div>
     </div>
-
-    <!-- Quantity validation -->
-    <div th:replace="~{fragments/stock-quantity-form :: stock-quantity-script}"></div>
     <script th:inline="javascript">
         /*<![CDATA[*/
         document.addEventListener('DOMContentLoaded', function () {
             let debounceTimer;
-            const allControls = document.querySelectorAll('.stock-quantity-input, .input-group button');
+            const updateGrandTotal = (amount) => {
+                const grandTotalEl = document.getElementById('grand-total');
+                if (grandTotalEl) {
+                    grandTotalEl.textContent = '$' + amount.toFixed(2);
+                }
+            };
 
-            document.querySelectorAll('.stock-quantity-input').forEach(input => {
+            function toggleInputs(disabled) {
+                document.querySelectorAll(
+                    '.stock-quantity-input, .input-group button, .btn-danger')
+                    .forEach(el => {
+                        el.disabled = disabled;
+                    });
+            }
+
+            const sendUpdate = async (input) => {
+                toggleInputs(true);
                 const form = input.closest('form');
-                input.addEventListener('change', function (e) {
-                    const currentForm = e.target.closest('form');
-                    clearTimeout(debounceTimer);
+                if (!form) {
+                    console.error("Form not found for input. Check HTML structure.");
+                    toggleInputs(false);
+                    return;
+                }
+                toggleInputs(true);
 
-                    allControls.forEach(control => {
-                        control.disabled = control.closest('form') !== currentForm;
+                const productId = form.querySelector('input[name="productId"]').value;
+                let quantity = parseInt(input.value);
+                if (isNaN(quantity) || quantity < 1) {
+                    quantity = 1;
+                    input.value = 1;
+                }
+                const csrfToken = form.querySelector('input[name="_csrf"]').value;
+
+                try {
+                    const response = await fetch('/api/cart/update', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            productId: parseInt(productId),
+                            quantity: quantity
+                        })
                     });
 
-                    debounceTimer = setTimeout(() => {
-                        allControls.forEach(control => {
-                            if (control.tagName.toLowerCase() === 'input') {
-                                control.readOnly = true;
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.removed) {
+                            if (data.isEmpty) {
+                                window.location.reload();
                             } else {
-                                control.disabled = true;
+                                const row = document.getElementById('cart-item-row-' + productId);
+                                if (row) row.remove();
+                                updateGrandTotal(data.totalAmount);
                             }
-                        });
-                        form.submit();
-                    }, 500);
+                        } else {
+                            const itemTotalEl = document.getElementById('item-total-' + productId);
+                            if (itemTotalEl) {
+                                itemTotalEl.textContent = '$' + data.itemTotal.toFixed(2);
+                            }
+                            updateGrandTotal(data.grandTotal);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Update error:', error);
+                } finally {
+                    toggleInputs(false);
+                    if (document.body.contains(input)) {
+                        input.focus();
+                    }
+                }
+            };
+
+            document.querySelectorAll('form[action$="/cart/update"]').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
                 });
             });
+
+            document.querySelectorAll('.stock-quantity-input')
+                .forEach(input => {
+                    let debounceTimer;
+
+                    input.addEventListener('change', function (e) {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(
+                            () => sendUpdate(e.target), 500);
+                    });
+
+                    const group = input.closest('.input-group');
+                    if (group) {
+                        const btns = group.querySelectorAll('button');
+
+                        btns[0].addEventListener('click', () => {
+                            input.stepDown();
+                            input.dispatchEvent(new Event('change'));
+                        });
+
+                        btns[1].addEventListener('click', () => {
+                            input.stepUp();
+                            input.dispatchEvent(new Event('change'));
+                        });
+                    }
+                });
+
+            document.querySelectorAll('form[action$="/cart/remove"]')
+                .forEach(form => {
+                    form.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+                        toggleInputs(true);
+
+                        const productId = this.querySelector('input[name="productId"]').value;
+                        const csrfToken = this.querySelector('input[name="_csrf"]').value;
+                        try {
+                            const response = await fetch(
+                                '/api/cart/remove?productId=' + productId, {
+                                    method: 'DELETE',
+                                    headers: {'X-CSRF-TOKEN': csrfToken}
+                                });
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.isEmpty) {
+                                    window.location.reload();
+                                } else {
+                                    const row = document.getElementById('cart-item-row-' + productId);
+                                    if (row) row.remove();
+                                    updateGrandTotal(data.totalAmount);
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Remove error:', error);
+                        } finally {
+                            toggleInputs(false);
+                        }
+                    });
+                });
         });
         /*]]>*/
     </script>
