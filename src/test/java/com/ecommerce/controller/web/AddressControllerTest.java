@@ -60,7 +60,7 @@ public class AddressControllerTest {
             .param("postalCode", "12345")
             .param("country", "test_country"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attribute("addressSuccess", "Address saved successfully!"));
 
     ArgumentCaptor<AddressDto> captor = ArgumentCaptor.forClass(AddressDto.class);
@@ -85,7 +85,7 @@ public class AddressControllerTest {
             .param("postalCode", "12345")
             .param("country", "test_country"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attributeExists(
             "address", "org.springframework.validation.BindingResult.address", "openAddressModal"));
 
@@ -103,7 +103,7 @@ public class AddressControllerTest {
             .param("postalCode", "12345")
             .param("country", "test_country"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attributeExists("address", "org.springframework.validation.BindingResult.address", "openAddressModal"));
 
     verify(addressService, never()).saveAddress(any(AddressDto.class));
@@ -123,7 +123,7 @@ public class AddressControllerTest {
             .param("postalCode", "12345")
             .param("country", "test_country"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attribute("addressError", errorMessage));
   }
 
@@ -142,7 +142,7 @@ public class AddressControllerTest {
             .param("postalCode", "12345")
             .param("country", "test_country"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attribute("addressError", "Address with ID 1 not found."));
   }
 
@@ -151,7 +151,7 @@ public class AddressControllerTest {
     mockMvc.perform(post("/addresses/delete/1")
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attribute("addressSuccess", "Address deleted successfully!"));
 
     verify(addressService).deleteAddress(1L);
@@ -165,7 +165,7 @@ public class AddressControllerTest {
     mockMvc.perform(post("/addresses/delete/1")
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attribute("addressError", "Cannot delete non-existent address."));
 
     verify(addressService).deleteAddress(1L);

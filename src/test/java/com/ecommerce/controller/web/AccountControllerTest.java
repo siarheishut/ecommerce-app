@@ -101,7 +101,7 @@ public class AccountControllerTest {
             .param("newPassword", "newPass123")
             .param("confirmPassword", "newPass123"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attribute("successMessage", "Your password has been changed successfully."));
   }
 
