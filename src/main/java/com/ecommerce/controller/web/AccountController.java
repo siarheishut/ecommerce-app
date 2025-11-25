@@ -64,7 +64,7 @@ public class AccountController {
     log.info("User successfully changed their password.");
     redirectAttributes.addFlashAttribute("successMessage",
         "Your password has been changed successfully.");
-    return "redirect:/";
+    return "redirect:/my-account";
   }
 
   @GetMapping("/forgot-password")

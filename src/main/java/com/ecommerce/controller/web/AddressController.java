@@ -37,7 +37,7 @@ public class AddressController {
       redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "address",
           bindingResult);
       redirectAttributes.addFlashAttribute("openAddressModal", true);
-      return "redirect:/";
+      return "redirect:/my-account";
     }
 
     try {
@@ -51,7 +51,7 @@ public class AddressController {
       log.warn("User tried to update a non-existent address with id: {}", addressDto.getId(), e);
       redirectAttributes.addFlashAttribute("addressError", e.getMessage());
     }
-    return "redirect:/";
+    return "redirect:/my-account";
   }
 
   @PostMapping("/delete/{id}")
@@ -64,6 +64,6 @@ public class AddressController {
       log.warn("User tried to delete a non-existent address with id: {}", id, e);
       redirectAttributes.addFlashAttribute("addressError", e.getMessage());
     }
-    return "redirect:/";
+    return "redirect:/my-account";
   }
 }
