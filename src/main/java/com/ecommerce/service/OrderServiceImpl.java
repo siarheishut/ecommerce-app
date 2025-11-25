@@ -1,10 +1,6 @@
 package com.ecommerce.service;
 
-import com.ecommerce.cart.CartSessionItem;
-import com.ecommerce.cart.ShoppingCart;
-import com.ecommerce.dto.OrderHistoryDto;
-import com.ecommerce.dto.OrderHistoryItemDto;
-import com.ecommerce.dto.ShippingDetailsDto;
+import com.ecommerce.dto.*;
 import com.ecommerce.entity.*;
 import com.ecommerce.exception.EmptyCartOrderException;
 import com.ecommerce.exception.InsufficientStockException;
@@ -26,7 +22,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
   private final OrderRepository orderRepository;
   private final ProductRepository productRepository;
-  private final ShoppingCart shoppingCart;
+  private final CartService cartService;
   private final UserService userService;
   private final EmailService emailService;
 
@@ -51,7 +47,9 @@ public class OrderServiceImpl implements OrderService {
   @Override
   @Transactional
   public void placeOrder(ShippingDetailsDto shippingDetailsDto) {
-    if (shoppingCart.getItems().isEmpty()) {
+    CartViewDto cartView = cartService.getCartForCurrentUser();
+
+    if (cartView.items().isEmpty()) {
       throw new EmptyCartOrderException("Cannot create order from an empty cart.");
     }
 
@@ -66,7 +64,7 @@ public class OrderServiceImpl implements OrderService {
     order.setOrderDate(Instant.now());
     order.setStatus(Order.Status.PENDING);
     order.setShippingDetails(shippingDetails);
-    List<Long> productIds = shoppingCart.getItems().stream()
+    List<Long> productIds = cartView.items().stream()
         .map(item -> item.product().id())
         .toList();
     List<Product> productsToUpdate = new ArrayList<>();
@@ -75,29 +73,34 @@ public class OrderServiceImpl implements OrderService {
         .collect(Collectors.toMap(Product::getId, Function.identity()));
 
     List<OrderItem> orderItems = new ArrayList<>();
-    for (CartSessionItem cartItem : shoppingCart.getItems()) {
+    for (CartItemViewDto cartItem : cartView.items()) {
+      Long productId = cartItem.product().id();
+      int quantity = cartItem.product().inCartQuantity();
       Product product = productMap.get(cartItem.product().id());
+
       if (product == null) {
         throw new ResourceNotFoundException("Product with ID " + cartItem.product().id() +
             " not found.");
       }
-      if (product.getStockQuantity() < cartItem.quantity()) {
+      if (product.getStockQuantity() < quantity) {
         throw new InsufficientStockException("Not enough stock for product: " + product.getName() +
             ".Available: " + product.getStockQuantity() + ".");
       }
 
-      OrderItem orderItem = new OrderItem(order, product, cartItem.quantity());
+      OrderItem orderItem = new OrderItem(order, product, quantity);
       orderItems.add(orderItem);
-      product.setStockQuantity(product.getStockQuantity() - cartItem.quantity());
+      product.setStockQuantity(product.getStockQuantity() - quantity);
       productsToUpdate.add(product);
     }
 
     order.addOrderItems(orderItems);
-    order.setTotalAmount(shoppingCart.getTotalAmount());
+    order.setTotalAmount(cartView.totalAmount());
 
     productRepository.saveAll(productsToUpdate);
     orderRepository.save(order);
-    shoppingCart.clear();
+    for (Long id : productIds) {
+      cartService.removeItem(id);
+    }
     emailService.sendOrderConfirmationEmail(order);
   }
 

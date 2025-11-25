@@ -1,14 +1,14 @@
 package com.ecommerce.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
@@ -18,9 +18,14 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 public class SecurityConfig {
   private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
   private final AccessDeniedHandler customAccessDeniedHandler;
+  private final UserDetailsService userDetailsService;
+
+  @Value("${ecommerce.security.remember-me-key}")
+  private String rememberMeKey;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
     http
         .authorizeHttpRequests(configurer ->
             configurer
@@ -41,12 +46,17 @@ public class SecurityConfig {
                 .failureUrl("/login?error=true")
                 .permitAll()
         )
+        .rememberMe(remember -> remember
+            .key(rememberMeKey)
+            .tokenValiditySeconds(86400 * 30)
+            .userDetailsService(userDetailsService)
+        )
         .logout(logout ->
             logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("JSESSIONID", "remember-me")
                 .permitAll()
         );
     http
@@ -55,11 +65,6 @@ public class SecurityConfig {
         );
 
     return http.build();
-  }
-
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
   }
 
   @Bean

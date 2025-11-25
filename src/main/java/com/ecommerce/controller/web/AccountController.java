@@ -1,7 +1,9 @@
 package com.ecommerce.controller.web;
 
+import com.ecommerce.dto.AddressDto;
 import com.ecommerce.dto.ChangePasswordDto;
 import com.ecommerce.dto.PasswordResetDto;
+import com.ecommerce.dto.UserInfoDto;
 import com.ecommerce.entity.User;
 import com.ecommerce.exception.UserNotAuthenticatedException;
 import com.ecommerce.service.UserService;
@@ -62,7 +64,7 @@ public class AccountController {
     log.info("User successfully changed their password.");
     redirectAttributes.addFlashAttribute("successMessage",
         "Your password has been changed successfully.");
-    return "redirect:/";
+    return "redirect:/my-account";
   }
 
   @GetMapping("/forgot-password")
@@ -134,5 +136,14 @@ public class AccountController {
       redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
       return "redirect:/reset-password?token=" + passwordResetDto.getToken();
     }
+  }
+
+  @GetMapping("/my-account")
+  public String showMyAccount(Model model, Authentication authentication) {
+    User currentUser = userService.getCurrentUser();
+    model.addAttribute("userInfo", UserInfoDto.fromEntity(currentUser));
+    model.addAttribute("address", new AddressDto()); // Для формы добавления
+
+    return "public/my-account";
   }
 }

@@ -20,6 +20,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -50,6 +52,35 @@ public class AccountControllerTest {
   private StringToCategoryConverter stringToCategoryConverter;
 
   @Test
+  @WithMockUser(username = "testuser")
+  void whenShowMyAccount_returnsDashboardWithUserData() throws Exception {
+    User currentUser = new User();
+    currentUser.setUsername("testuser");
+    currentUser.setFirstName("John");
+    currentUser.setLastName("Doe");
+    currentUser.setPhoneNumber("123456789");
+
+    when(userService.getCurrentUser()).thenReturn(currentUser);
+
+    mockMvc.perform(get("/my-account"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("public/my-account"))
+        .andExpect(model().attributeExists("userInfo", "address"))
+        .andExpect(model().attribute("userInfo", hasProperty("firstName", is("John"))))
+        .andExpect(model().attribute("userInfo", hasProperty("lastName", is("Doe"))));
+
+    verify(userService).getCurrentUser();
+  }
+
+  @Test
+  @WithAnonymousUser
+  void whenShowMyAccount_asAnonymous_redirectsToLogin() throws Exception {
+    mockMvc.perform(get("/my-account"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrlPattern("**/login"));
+  }
+
+  @Test
   @WithMockUser
   void whenShowChangePasswordForm_returnsForm() throws Exception {
     mockMvc.perform(get("/change-password"))
@@ -70,7 +101,7 @@ public class AccountControllerTest {
             .param("newPassword", "newPass123")
             .param("confirmPassword", "newPass123"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/"))
+        .andExpect(redirectedUrl("/my-account"))
         .andExpect(flash().attribute("successMessage", "Your password has been changed successfully."));
   }
 

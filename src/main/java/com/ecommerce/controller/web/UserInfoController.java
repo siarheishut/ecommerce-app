@@ -37,6 +37,6 @@ public class UserInfoController {
     log.info("User info updated successfully for user: {}", currentUser.getUsername());
     redirectAttributes.addFlashAttribute("userInfoSuccess",
         "Your information has been updated successfully!");
-    return "redirect:/";
+    return "redirect:/my-account";
   }
 }
