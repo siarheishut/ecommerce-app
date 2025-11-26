@@ -139,11 +139,14 @@ public class AccountController {
   }
 
   @GetMapping("/my-account")
-  public String showMyAccount(Model model, Authentication authentication) {
+  public String showMyAccount(Model model) {
     User currentUser = userService.getCurrentUser();
-    model.addAttribute("userInfo", UserInfoDto.fromEntity(currentUser));
-    model.addAttribute("address", new AddressDto()); // Для формы добавления
-
+    if (!model.containsAttribute("userInfo")) {
+      model.addAttribute("userInfo", UserInfoDto.fromEntity(currentUser));
+    }
+    if (!model.containsAttribute("address")) {
+      model.addAttribute("address", new AddressDto());
+    }
     return "public/my-account";
   }
 }
