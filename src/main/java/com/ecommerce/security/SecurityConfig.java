@@ -30,7 +30,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(configurer ->
             configurer
                 .requestMatchers(
-                    "/api/auth/**", "/cart/**", "/", "/products/list", "/products/**",
+                    "/api/auth/**", "/api/cart/**", "/cart/**", "/", "/products/list", "/products/**",
                     "/login", "/logout", "/register", "/processRegistration", "/error",
                     "/forgot-password", "/reset-password", "/access-denied", "/favicon.ico",
                     "/orders/shipping-details", "/orders/place-order", "/orders/confirmation")

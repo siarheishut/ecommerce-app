@@ -39,10 +39,6 @@ public class ShoppingCart implements Serializable {
         return;
       }
       ProductViewDto product = item.product();
-      if (product.stockQuantity() < quantity) {
-        throw new InsufficientStockException("Not enough stock for product: " + product.name() +
-            ".Available: " + product.stockQuantity() + ".");
-      }
       items.put(productId, new CartSessionItem(product, quantity));
     }
   }
