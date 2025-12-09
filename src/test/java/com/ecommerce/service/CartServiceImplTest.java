@@ -2,188 +2,262 @@ package com.ecommerce.service;
 
 import com.ecommerce.cart.CartSessionItem;
 import com.ecommerce.cart.ShoppingCart;
-import com.ecommerce.dto.CartItemViewDto;
 import com.ecommerce.dto.CartViewDto;
 import com.ecommerce.dto.ProductViewDto;
+import com.ecommerce.entity.Cart;
+import com.ecommerce.entity.CartItem;
 import com.ecommerce.entity.Product;
+import com.ecommerce.entity.User;
 import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.repository.CartRepository;
 import com.ecommerce.repository.ProductRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CartServiceImplTest {
-  @InjectMocks
-  CartServiceImpl cartService;
+class CartServiceImplTest {
+
   @Mock
   private ProductRepository productRepository;
   @Mock
-  private ShoppingCart shoppingCart;
-  @Spy
-  private Lock cartLock = new ReentrantLock();
+  private CartRepository cartRepository;
+  @Mock
+  private ShoppingCart sessionCart;
+  @Mock
+  private UserService userService;
+  @Mock
+  private Lock cartLock;
+
+  @InjectMocks
+  private CartServiceImpl cartService;
+
+  private Product product;
+  private User user;
+
+  @BeforeEach
+  void setUp() {
+    user = mock(User.class);
+    product = mock(Product.class);
+  }
 
   @Test
-  public void whenAddProductToCart_withNotFoundId_throwResourceNotFoundException() {
-    Long productId = 1L;
-    when(productRepository.findById(productId)).thenReturn(Optional.empty());
+  void whenAddProductToCart_withNonExistentProduct_throwsResourceNotFoundException() {
+    when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-    ResourceNotFoundException exception = assertThrows(
-        ResourceNotFoundException.class,
-        () -> cartService.addProductToCart(productId, 2)
+    Exception exception = assertThrows(ResourceNotFoundException.class, () ->
+        cartService.addProductToCart(99L, 1)
     );
 
-    verify(shoppingCart, never()).addItem(any(ProductViewDto.class), eq(2));
-    verify(cartLock).lock();
-    verify(cartLock).unlock();
-    assertThat(exception.getMessage()).isEqualTo("Product with ID 1 not found.");
+    assertThat(exception.getMessage()).isEqualTo("Product with ID 99 not found.");
   }
 
-  @Test
-  void whenAddProductToCart_withSufficientStock_addsItem() {
-    Long productId = 1L;
-    int quantity = 2;
-    Product product = new Product();
-    product.setStockQuantity(10);
+  @Nested
+  class AuthenticatedUserTests {
 
-    when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-    when(shoppingCart.getItems()).thenReturn(Collections.emptyList());
+    @BeforeEach
+    void setUp() {
+      user = mock(User.class);
+      product = mock(Product.class);
+      when(userService.getCurrentUser()).thenReturn(user);
+    }
 
-    cartService.addProductToCart(productId, quantity);
+    @Test
+    void whenAddProductToCart_forNewItem_createsCartAndAddsItem() {
+      Cart userCart = mock(Cart.class);
 
-    verify(shoppingCart).addItem(any(ProductViewDto.class), eq(quantity));
-    verify(cartLock).lock();
-    verify(cartLock).unlock();
+      when(product.getId()).thenReturn(1L);
+      when(product.getStockQuantity()).thenReturn(10);
+
+      when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+      when(cartRepository.findByUserWithLock(user)).thenReturn(Optional.empty());
+      when(cartRepository.save(any())).thenReturn(userCart);
+      when(userService.getCurrentUser()).thenReturn(user);
+
+      cartService.addProductToCart(product.getId(), 2);
+
+      verify(cartRepository, times(2)).save(any(Cart.class));
+    }
+
+    @Test
+    void whenAddProductToCart_withInsufficientStock_throwsException() {
+      when(product.getId()).thenReturn(1L);
+      when(product.getStockQuantity()).thenReturn(10);
+      when(product.getName()).thenReturn("Laptop");
+
+      Cart cart = new Cart();
+      cart.setUser(user);
+      when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+      when(cartRepository.findByUserWithLock(user)).thenReturn(Optional.of(cart));
+
+      Exception exception = assertThrows(InsufficientStockException.class, () ->
+          cartService.addProductToCart(product.getId(), 11)
+      );
+
+      assertThat(exception.getMessage()).contains("Not enough stock for Laptop");
+    }
+
+    @Test
+    void whenUpdateProductQuantity_updatesItemInDbCart() {
+      when(product.getId()).thenReturn(1L);
+      when(product.getStockQuantity()).thenReturn(10);
+
+      CartItem cartItem = new CartItem(null, product, 2);
+      Cart cart = new Cart();
+      cart.setUser(user);
+      cart.setItems(new ArrayList<>(List.of(cartItem)));
+
+      when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+      when(cartRepository.findByUserWithLock(user)).thenReturn(Optional.of(cart));
+
+      cartService.updateProductQuantity(product.getId(), 5);
+
+      assertThat(cartItem.getQuantity()).isEqualTo(5);
+      verify(cartRepository).save(cart);
+    }
+
+    @Test
+    void whenUpdateProductQuantity_toZero_removesItemFromDbCart() {
+      CartItem cartItem = new CartItem(null, product, 2);
+      Cart cart = new Cart();
+      cart.setUser(user);
+      cart.setItems(new ArrayList<>(List.of(cartItem)));
+
+      when(cartRepository.findByUserWithLock(user)).thenReturn(Optional.of(cart));
+
+      cartService.updateProductQuantity(product.getId(), 0);
+
+      assertThat(cart.getItems()).isEmpty();
+      verify(cartRepository).save(cart);
+    }
+
+    @Test
+    void whenGetCart_returnsDbCartView() {
+      when(product.getId()).thenReturn(1L);
+      when(product.getPrice()).thenReturn(BigDecimal.valueOf(1500));
+
+      CartItem cartItem = new CartItem(null, product, 2);
+      Cart cart = new Cart();
+      cart.setUser(user);
+      cart.setItems(new ArrayList<>(List.of(cartItem)));
+
+      when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
+
+      CartViewDto cartView = cartService.getCartForCurrentUser();
+
+      assertThat(cartView.items()).hasSize(1);
+      assertThat(cartView.items().stream().toList().get(0).product().id()).isEqualTo(1L);
+      assertThat(cartView.items().stream().toList().get(0).product().inCartQuantity()).isEqualTo(2);
+      assertThat(cartView.totalAmount()).isEqualByComparingTo("3000.00");
+    }
   }
 
-  @Test
-  void whenAddProductToCart_withInsufficientStock_throwsInsufficientStockException() {
-    Long productId = 1L;
-    int quantity = 5;
-    Product product = new Product();
-    product.setName("Test Product");
-    product.setStockQuantity(4);
+  @Nested
+  class AnonymousUserTests {
 
-    when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-    when(shoppingCart.getItems()).thenReturn(Collections.emptyList());
+    @BeforeEach
+    void setUp() {
+      when(userService.getCurrentUser()).thenThrow(new RuntimeException("No user logged in"));
+    }
 
-    InsufficientStockException exception = assertThrows(
-        InsufficientStockException.class,
-        () -> cartService.addProductToCart(productId, quantity)
-    );
+    @Test
+    void whenAddProductToCart_addsItemToSessionCart() {
+      when(product.getId()).thenReturn(1L);
+      when(product.getStockQuantity()).thenReturn(10);
 
-    assertThat(exception.getMessage())
-        .isEqualTo("Not enough stock for Test Product. Available: 4.");
-    verify(shoppingCart, never()).addItem(any(), anyInt());
-    verify(cartLock).lock();
-    verify(cartLock).unlock();
-  }
+      when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+      when(sessionCart.getItems()).thenReturn(List.of());
 
-  @Test
-  void whenUpdateProductQuantity_withSufficientStock_updatesItem() {
-    Long productId = 1L;
-    int quantity = 3;
-    Product product = new Product();
-    product.setStockQuantity(5);
+      cartService.addProductToCart(product.getId(), 1);
 
-    when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+      verify(sessionCart).addItem(any(ProductViewDto.class), eq(1));
+      verify(cartLock).lock();
+      verify(cartLock).unlock();
+    }
 
-    cartService.updateProductQuantity(productId, quantity);
+    @Test
+    void whenAddProductToCart_withInsufficientStock_throwsException() {
+      when(product.getId()).thenReturn(1L);
+      when(product.getName()).thenReturn("Laptop");
+      when(product.getStockQuantity()).thenReturn(2);
 
-    verify(shoppingCart).updateItemQuantity(productId, quantity);
-    verify(cartLock).lock();
-    verify(cartLock).unlock();
-  }
+      CartSessionItem sessionItem = new CartSessionItem(ProductViewDto.fromEntity(product, 1), 1);
+      when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+      when(sessionCart.getItems()).thenReturn(List.of(sessionItem));
 
-  @Test
-  void whenUpdateProductQuantity_withInsufficientStock_throwsInsufficientStockException() {
-    Long productId = 1L;
-    int quantity = 10;
-    Product product = new Product();
-    product.setName("Test Product");
-    product.setStockQuantity(5);
+      Exception exception = assertThrows(InsufficientStockException.class, () ->
+          cartService.addProductToCart(product.getId(), 2)
+      );
 
-    when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+      assertThat(exception.getMessage()).isEqualTo("Not enough stock for Laptop. Available: 1.");
+      verify(cartLock).lock();
+      verify(cartLock).unlock();
+    }
 
-    InsufficientStockException exception = assertThrows(
-        InsufficientStockException.class,
-        () -> cartService.updateProductQuantity(productId, quantity)
-    );
+    @Test
+    void whenUpdateProductQuantity_updatesItemInSessionCart() {
+      when(product.getId()).thenReturn(1L);
+      when(product.getStockQuantity()).thenReturn(5);
 
-    assertThat(exception.getMessage()).isEqualTo("Not enough stock for Test Product. Available: 5");
-    verify(shoppingCart, never()).updateItemQuantity(anyLong(), anyInt());
-    verify(cartLock).lock();
-    verify(cartLock).unlock();
-  }
+      when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
-  @Test
-  void whenRemoveItem_delegatesToShoppingCart() {
-    Long productId = 1L;
+      cartService.updateProductQuantity(product.getId(), 5);
 
-    cartService.removeItem(productId);
+      verify(sessionCart).updateItemQuantity(product.getId(), 5);
+      verify(cartLock).lock();
+      verify(cartLock).unlock();
+    }
 
-    verify(shoppingCart).removeItem(productId);
-    verify(cartLock).lock();
-    verify(cartLock).unlock();
-  }
+    @Test
+    void whenUpdateProductQuantity_toNegative_removesItemFromSessionCart() {
+      cartService.updateProductQuantity(1L, -1);
 
-  @Test
-  void whenGetCartForCurrentUser_withEmptyCart_returnsEmptyCartView() {
-    when(shoppingCart.getItems()).thenReturn(Collections.emptyList());
+      verify(sessionCart).removeItem(1L);
+      verify(cartLock).lock();
+      verify(cartLock).unlock();
+    }
 
-    CartViewDto cartView = cartService.getCartForCurrentUser();
+    @Test
+    void whenRemoveItem_removesFromSessionCart() {
+      cartService.removeItem(1L);
 
-    assertThat(cartView.items()).isEmpty();
-    assertThat(cartView.totalAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-    verify(productRepository, never()).findAllById(any());
-  }
+      verify(sessionCart).removeItem(1L);
+      verify(cartLock).lock();
+      verify(cartLock).unlock();
+    }
 
-  @Test
-  void whenGetCartForCurrentUser_withItems_returnsPopulatedCartView() {
-    Product product1 = mock(Product.class);
-    when(product1.getId()).thenReturn(1L);
-    when(product1.getName()).thenReturn("Chandelier");
-    when(product1.getPrice()).thenReturn(new BigDecimal("1200.00"));
-    when(product1.getStockQuantity()).thenReturn(10);
+    @Test
+    void whenGetCart_returnsSessionCartView() {
+      when(product.getId()).thenReturn(1L);
+      when(product.getPrice()).thenReturn(BigDecimal.valueOf(1500));
 
-    Product product2 = mock(Product.class);
-    when(product2.getId()).thenReturn(2L);
-    when(product2.getName()).thenReturn("Box");
-    when(product2.getPrice()).thenReturn(new BigDecimal("25.50"));
-    when(product2.getStockQuantity()).thenReturn(50);
+      ProductViewDto productDto = ProductViewDto.fromEntity(product, 2);
+      CartSessionItem sessionItem = new CartSessionItem(productDto, 2);
+      when(sessionCart.getItems()).thenReturn(List.of(sessionItem));
+      when(productRepository.findAllById(List.of(product.getId()))).thenReturn(List.of(product));
 
-    CartSessionItem item1 = new CartSessionItem(ProductViewDto.fromEntity(product1, 1), 1);
-    CartSessionItem item2 = new CartSessionItem(ProductViewDto.fromEntity(product2, 2), 2);
+      CartViewDto cartView = cartService.getCartForCurrentUser();
 
-    when(shoppingCart.getItems()).thenReturn(List.of(item1, item2));
-    when(productRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(product1, product2));
-
-    CartViewDto cartView = cartService.getCartForCurrentUser();
-    List<CartItemViewDto> items = cartView.items().stream().toList();
-
-    assertThat(items).hasSize(2);
-    assertThat(items.get(0).product().name()).isEqualTo("Chandelier");
-    assertThat(items.get(0).product().inCartQuantity()).isEqualTo(1);
-    assertThat(items.get(1).product().name()).isEqualTo("Box");
-    assertThat(items.get(1).product().inCartQuantity()).isEqualTo(2);
-
-    assertThat(cartView.totalAmount()).isEqualByComparingTo("1251.00");
+      assertThat(cartView.items()).hasSize(1);
+      assertThat(cartView.items().stream().toList().get(0).product().id()).isEqualTo(1L);
+      assertThat(cartView.items().stream().toList().get(0).product().inCartQuantity()).isEqualTo(2);
+      assertThat(cartView.totalAmount()).isEqualByComparingTo("3000.00");
+    }
   }
 }
