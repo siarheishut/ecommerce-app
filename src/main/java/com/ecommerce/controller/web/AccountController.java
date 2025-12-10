@@ -7,6 +7,11 @@ import com.ecommerce.dto.UserInfoDto;
 import com.ecommerce.entity.User;
 import com.ecommerce.exception.UserNotAuthenticatedException;
 import com.ecommerce.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,11 +28,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Optional;
 
 @Slf4j
+@Tag(name = "Account UI", description = "User account management.")
 @Controller
 @RequiredArgsConstructor
 public class AccountController {
   private final UserService userService;
 
+  @Operation(
+      summary = "Show change password form",
+      description = "Displays the view for changing the current user's password.")
+  @ApiResponse(responseCode = "200", description = "Form displayed successfully.")
   @GetMapping("/change-password")
   public String showChangePasswordForm(Model model) {
     if (!model.containsAttribute("changePasswordDto")) {
@@ -36,6 +46,21 @@ public class AccountController {
     return "public/change-password-form";
   }
 
+  @Operation(
+      summary = "Process password change",
+      description = "Validates the old password and sets a new one.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Success: Redirects to /my-account with success message."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Failure: Redirects back to form if validation fails or old password is" +
+              " wrong."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Not Authenticated: Redirects to /login if user is not authenticated.")
+  })
   @PostMapping("/change-password")
   public String processChangePassword(
       @Valid @ModelAttribute("changePasswordDto") ChangePasswordDto changePasswordDto,
@@ -53,7 +78,8 @@ public class AccountController {
       if (!userService.changeCurrentUserPassword(changePasswordDto)) {
         log.warn("User failed to change password due to incorrect current password.");
         redirectAttributes.addFlashAttribute("changePasswordDto", changePasswordDto);
-        redirectAttributes.addFlashAttribute("errorMessage", "The current password is not correct.");
+        redirectAttributes.addFlashAttribute("errorMessage", "The current password is not" +
+            " correct.");
         return "redirect:/change-password";
       }
     } catch (UserNotAuthenticatedException e) {
@@ -67,6 +93,17 @@ public class AccountController {
     return "redirect:/my-account";
   }
 
+  @Operation(
+      summary = "Show forgot password form",
+      description = "Displays the form to request a password reset link.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200",
+          description = "Form displayed successfully."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to home page if user is already logged in.")
+  })
   @GetMapping("/forgot-password")
   public String showForgotPasswordForm(Authentication authentication) {
     if (authentication != null && authentication.isAuthenticated()) {
@@ -75,24 +112,51 @@ public class AccountController {
     return "public/forgot-password-form";
   }
 
+  @Operation(
+      summary = "Request password reset",
+      description = "Sends a password reset email if the account exists.")
+  @ApiResponse(
+      responseCode = "302",
+      description = "Redirects back to form with a generic info message.")
   @PostMapping("/forgot-password")
-  public String processForgotPassword(@RequestParam("email") String userEmail,
-                                      RedirectAttributes redirectAttributes) {
+  public String processForgotPassword(
+      @Parameter(description = "User's email address")
+      @RequestParam("email") String userEmail,
+
+      RedirectAttributes redirectAttributes) {
     Optional<User> userOptional = userService.findByEmail(userEmail);
     if (userOptional.isPresent()) {
       userService.createPasswordResetTokenForUser(userOptional.get());
     } else {
       log.info("Password reset requested for non-existent user with email: {}", userEmail);
     }
-    redirectAttributes.addFlashAttribute("message", "If an account with that email exists, " +
-        "a password reset link has been sent.");
+    redirectAttributes.addFlashAttribute("message", "If an account with that email exists," +
+        " a password reset link has been sent.");
     return "redirect:/forgot-password";
   }
 
+  @Operation(
+      summary = "Show reset password form",
+      description = "Displays the form to enter a new password using a token.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200",
+          description = "Token valid, form displayed."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Token invalid or expired: Redirects to /login with error message."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to home page if user is already logged in.")
+  })
   @GetMapping("/reset-password")
-  public String showResetPasswordForm(@RequestParam("token") String token, Model model,
-                                      RedirectAttributes redirectAttributes,
-                                      Authentication authentication) {
+  public String showResetPasswordForm(
+      @Parameter(description = "Password reset token.")
+      @RequestParam("token") String token,
+
+      Model model,
+      RedirectAttributes redirectAttributes,
+      Authentication authentication) {
     if (authentication != null && authentication.isAuthenticated()) {
       return "redirect:/";
     }
@@ -109,6 +173,18 @@ public class AccountController {
     return "public/reset-password-form";
   }
 
+  @Operation(
+      summary = "Process password reset",
+      description = "Resets the user's password if the token is valid.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Success: Password changed, redirects to /login."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Failure: Redirects back to form (validation error) or /login (invalid" +
+              " token).")
+  })
   @PostMapping("/reset-password")
   public String processResetPassword(
       @Valid @ModelAttribute("passwordResetDto") PasswordResetDto passwordResetDto,
@@ -138,6 +214,10 @@ public class AccountController {
     }
   }
 
+  @Operation(
+      summary = "View my account",
+      description = "Displays the dashboard with user info and addresses.")
+  @ApiResponse(responseCode = "200", description = "Dashboard displayed.")
   @GetMapping("/my-account")
   public String showMyAccount(Model model) {
     User currentUser = userService.getCurrentUser();
