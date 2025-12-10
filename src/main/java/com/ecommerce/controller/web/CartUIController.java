@@ -4,6 +4,11 @@ import com.ecommerce.dto.CartUpdateDto;
 import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.service.CartService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,12 +19,19 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
+@Tag(
+    name = "Shopping Cart UI",
+    description = "Operations for viewing and managing the shopping cart.")
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/cart")
 public class CartUIController {
   private final CartService cartService;
 
+  @Operation(
+      summary = "View cart",
+      description = "Displays the shopping cart page with current items and total.")
+  @ApiResponse(responseCode = "200", description = "Cart page displayed successfully.")
   @GetMapping
   public String viewCart(Model model) {
     log.info("User viewing cart.");
@@ -27,12 +39,30 @@ public class CartUIController {
     return "public/cart";
   }
 
+  @Operation(
+      summary = "Add to cart",
+      description = "Adds a product to the cart and redirects back to the browsing page.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Success: Product added, redirects to return URL."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Failure: Insufficient stock or invalid product, redirects with error" +
+              " message.")
+  })
   @PostMapping("/add")
-  public String addToCart(@RequestParam("productId") Long productId,
-                          @RequestParam(value = "quantity", defaultValue = "1") int quantity,
-                          @RequestParam(name = "returnUrl", defaultValue = "/products/list")
-                          String returnUrl,
-                          RedirectAttributes redirectAttributes) {
+  public String addToCart(
+      @Parameter(description = "ID of the product to add.")
+      @RequestParam("productId") Long productId,
+
+      @Parameter(description = "Quantity to add.")
+      @RequestParam(value = "quantity", defaultValue = "1") int quantity,
+
+      @Parameter(description = "URL to redirect back to.")
+      @RequestParam(name = "returnUrl", defaultValue = "/products/list") String returnUrl,
+
+      RedirectAttributes redirectAttributes) {
     log.info("Adding product {} to cart with quantity {}.", productId, quantity);
     try {
       cartService.addProductToCart(productId, quantity);
@@ -51,6 +81,17 @@ public class CartUIController {
     }
   }
 
+  @Operation(
+      summary = "Update cart item",
+      description = "Updates the quantity of a product via form submission.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Success: Quantity updated, redirects to cart."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Failure: Validation or stock error, redirects to cart with message.")
+  })
   @PutMapping("/update")
   public String updateQuantity(@Valid @ModelAttribute CartUpdateDto cartUpdateDto,
                                BindingResult bindingResult,
@@ -74,9 +115,16 @@ public class CartUIController {
     return "redirect:/cart";
   }
 
+  @Operation(
+      summary = "Remove cart item",
+      description = "Removes a product from the cart via form submission.")
+  @ApiResponse(responseCode = "302", description = "Success: Item removed, redirects to cart.")
   @DeleteMapping("/remove")
-  public String removeItem(@RequestParam("productId") Long productId,
-                           RedirectAttributes redirectAttributes) {
+  public String removeItem(
+      @Parameter(description = "ID of the product to remove.")
+      @RequestParam("productId") Long productId,
+      
+      RedirectAttributes redirectAttributes) {
     cartService.removeItem(productId);
     log.info("Removed product {} from cart.", productId);
     redirectAttributes.addFlashAttribute("successMessage",

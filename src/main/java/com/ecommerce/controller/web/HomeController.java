@@ -4,6 +4,7 @@ import com.ecommerce.dto.AddressDto;
 import com.ecommerce.dto.UserInfoDto;
 import com.ecommerce.entity.User;
 import com.ecommerce.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+@Tag(name = "Home Page", description = "Main landing page and common attributes.")
 @Controller
 @RequiredArgsConstructor
 public class HomeController {

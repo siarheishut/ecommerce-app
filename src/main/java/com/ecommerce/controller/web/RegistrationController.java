@@ -2,6 +2,10 @@ package com.ecommerce.controller.web;
 
 import com.ecommerce.dto.RegistrationDto;
 import com.ecommerce.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,14 +16,21 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
+@Tag(name = "Registration", description = "User registration operations.")
 @Controller
 @RequiredArgsConstructor
 public class RegistrationController {
   private final UserService userService;
 
+  @Operation(
+      summary = "Show registration form",
+      description = "Displays the sign-up page for new users.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Registration form displayed."),
+      @ApiResponse(responseCode = "302", description = "Redirects to home if already logged in.")
+  })
   @GetMapping("/register")
   public String showRegistrationForm(Model model, Authentication authentication) {
     if (authentication != null && authentication.isAuthenticated()) {
@@ -32,10 +43,21 @@ public class RegistrationController {
     return "public/registration-form";
   }
 
+  @Operation(summary = "Process registration", description = "Registers a new user account.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Success: Account created, redirects to login page."),
+      @ApiResponse(
+          responseCode = "200",
+          description = "Failure: Returns form view with validation error messages."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to home if already logged in.")
+  })
   @PostMapping("/processRegistration")
   public String processRegistration(@Valid @ModelAttribute("user") RegistrationDto registrationDto,
                                     BindingResult bindingResult,
-                                    RedirectAttributes redirectAttributes,
                                     Authentication authentication) {
     if (authentication != null && authentication.isAuthenticated()) {
       return "redirect:/";

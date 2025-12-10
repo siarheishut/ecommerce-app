@@ -30,12 +30,14 @@ public class SecurityConfig {
         .authorizeHttpRequests(configurer ->
             configurer
                 .requestMatchers(
-                    "/api/auth/**", "/api/cart/**", "/cart/**", "/", "/products/list", "/products/**",
-                    "/login", "/logout", "/register", "/processRegistration", "/error",
-                    "/forgot-password", "/reset-password", "/access-denied", "/favicon.ico",
-                    "/orders/shipping-details", "/orders/place-order", "/orders/confirmation")
+                    "/api/auth/**", "/api/cart/**", "/cart/**", "/", "/products/list",
+                    "/products/**", "/login", "/logout", "/register", "/error",
+                    "/processRegistration", "/forgot-password", "/reset-password",
+                    "/access-denied", "/favicon.ico", "/orders/shipping-details",
+                    "/orders/place-order", "/orders/confirmation")
                 .permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/admin/**")
+                .hasRole("ADMIN")
                 .anyRequest().authenticated()
         )
         .formLogin(form ->
