@@ -25,7 +25,6 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
     http
         .authorizeHttpRequests(configurer ->
             configurer
@@ -36,9 +35,21 @@ public class SecurityConfig {
                     "/access-denied", "/favicon.ico", "/orders/shipping-details",
                     "/orders/place-order", "/orders/confirmation")
                 .permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/admin/**")
+
+                .requestMatchers("/admin/**")
                 .hasRole("ADMIN")
-                .anyRequest().authenticated()
+
+                .requestMatchers("/v3/api-docs/admin")
+                .hasRole("ADMIN")
+
+                .requestMatchers("/v3/api-docs/**")
+                .permitAll()
+
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html")
+                .permitAll()
+
+                .anyRequest()
+                .authenticated()
         )
         .formLogin(form ->
             form
