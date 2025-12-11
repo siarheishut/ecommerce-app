@@ -34,15 +34,10 @@ public class AddressController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Address saved, redirects to /my-account."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Validation error or duplicate name, redirects to /my-account" +
-              " with error details."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Address limit exceeded, redirects to /my-account with error" +
-              " message.")
+          description = "Redirects to /my-account. <br>" +
+              "• **Success:** Address saved. <br>" +
+              "• **Failure:** Validation error, duplicate name, or limit exceeded (returns with " +
+              "error details).")
   })
   @PostMapping("/save")
   public String saveAddress(@Valid @ModelAttribute("address") AddressDto addressDto,
@@ -80,10 +75,9 @@ public class AddressController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Address deleted, redirects to /my-account."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Address not found, redirects to /my-account with error message.")
+          description = "Redirects to /my-account. <br>" +
+              "• **Success:** Address deleted. <br>" +
+              "• **Failure:** Address not found (returns with error message).")
   })
   @PostMapping("/delete/{id}")
   public String deleteAddress(

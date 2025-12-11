@@ -31,10 +31,9 @@ public class UserInfoController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Info updated, redirects to /my-account with success message."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Validation errors, redirects to /my-account (modal stays open).")
+          description = "Redirects to /my-account. <br>" +
+              "• **Success:** Info updated. <br>" +
+              "• **Failure:** Validation errors (modal stays open).")
   })
   @PostMapping("/update")
   public String updateUserInfo(@Valid @ModelAttribute("userInfo") UserInfoDto userInfoDto,

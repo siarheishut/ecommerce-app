@@ -45,11 +45,9 @@ public class CartUIController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Product added, redirects to return URL."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Insufficient stock or invalid product, redirects with error" +
-              " message.")
+          description = "Redirects to return URL (or product page). <br>" +
+              "• **Success:** Product added to cart. <br>" +
+              "• **Failure:** Insufficient stock or invalid product (redirects with error).")
   })
   @PostMapping("/add")
   public String addToCart(
@@ -87,10 +85,9 @@ public class CartUIController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Quantity updated, redirects to cart."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Validation or stock error, redirects to cart with message.")
+          description = "Redirects to cart. <br>" +
+              "• **Success:** Quantity updated. <br>" +
+              "• **Failure:** Validation or stock error (redirects with message).")
   })
   @PutMapping("/update")
   public String updateQuantity(@Valid @ModelAttribute CartUpdateDto cartUpdateDto,
@@ -123,7 +120,7 @@ public class CartUIController {
   public String removeItem(
       @Parameter(description = "ID of the product to remove.")
       @RequestParam("productId") Long productId,
-      
+
       RedirectAttributes redirectAttributes) {
     cartService.removeItem(productId);
     log.info("Removed product {} from cart.", productId);

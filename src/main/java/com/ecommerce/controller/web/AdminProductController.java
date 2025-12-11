@@ -84,14 +84,13 @@ public class AdminProductController {
       description = "Creates a new product or updates an existing one.")
   @ApiResponses(value = {
       @ApiResponse(
-          responseCode = "302",
-          description = "Success: Product saved, redirects to list."),
-      @ApiResponse(
           responseCode = "200",
           description = "Failure: Validation errors, returns form view."),
       @ApiResponse(
           responseCode = "302",
-          description = "Failure: Product ID not found (for update), redirects to list.")
+          description = "Redirects to product list. <br>" +
+              "• **Success:** Product saved. <br>" +
+              "• **Failure:** Product ID not found for update.")
   })
   @PostMapping("/save")
   public String saveProduct(
@@ -153,10 +152,9 @@ public class AdminProductController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Product deleted, redirects to referer page."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Product not found or error, redirects to referer page.")
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Product deleted. <br>" +
+              "• **Failure:** Product not found or internal error.")
   })
   @DeleteMapping("/delete/{id}")
   public String deleteProducts(
@@ -185,10 +183,9 @@ public class AdminProductController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Product restored, redirects to referer page."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Product not found or error, redirects to referer page.")
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Product restored. <br>" +
+              "• **Failure:** Product not found or internal error.")
   })
   @PostMapping("/restore/{id}")
   public String restoreProduct(

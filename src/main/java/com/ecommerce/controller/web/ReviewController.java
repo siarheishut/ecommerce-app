@@ -32,11 +32,10 @@ public class ReviewController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Review submitted, redirects to product page."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Validation error, duplicate review, or product not found, " +
-              "redirects to product page with error.")
+          description = "Redirects to product page. <br>" +
+              "• **Success:** Review submitted. <br>" +
+              "• **Failure:** Validation error, duplicate review, or product not found " +
+              "(redirects with error).")
   })
   @PostMapping
   public String addReview(
