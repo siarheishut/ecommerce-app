@@ -84,6 +84,9 @@ Maven setup.
    ```
    The application will be accessible at `http://localhost:8080`. The MySQL
    database will be automatically provisioned in a container.
+   > 📘 **API Documentation:** Once the application is running, you can explore
+   the OpenAPI documentation covering both REST endpoints and MVC routes at:  
+   > `http://localhost:8080/swagger-ui/index.html`
 
 ### Option 2: Local Run (Maven)
 
