@@ -44,8 +44,10 @@ products and categories.
     - **Docker** and **Docker Compose** support for containerized deployment.
     - **CI/CD pipeline** configured with GitHub Actions for building and
       deploying to Google Cloud (Cloud Run).
-    - **API Documentation:** Interactive **OpenAPI (Swagger)** documentation for
-      application routes and REST endpoints.
+    - **API Documentation:** Interactive **OpenAPI (Swagger)** documentation
+      with **segregated access**:
+        - Public API group for storefront features.
+        - Secured Admin API group (accessible only to authenticated admins).
 
 ## Tech Stack
 
@@ -69,6 +71,7 @@ Maven setup.
    git clone https://github.com/siarheishut/ecommerce-app.git
    cd ecommerce-app
    ```
+
 2. **Configure Environment:**
 
 - Create a `.env` file in the root directory (or rely on the defaults in
@@ -82,9 +85,6 @@ Maven setup.
    ```
    The application will be accessible at `http://localhost:8080`. The MySQL
    database will be automatically provisioned in a container.
-   > 📘 **API Documentation:** Once the application is running, you can explore
-   the OpenAPI documentation covering both REST endpoints and MVC routes at:  
-   > `http://localhost:8080/swagger-ui/index.html`
 
 ### Option 2: Local Run (Maven)
 
@@ -115,3 +115,13 @@ Maven setup.
       ./mvnw spring-boot:run
       ```
     - The application will be accessible at `http://localhost:8080`.
+
+> 📘 **API Documentation:** Once the application is running, access the
+> interactive UI at:  
+> `http://localhost:8080/swagger-ui/index.html`
+>
+> By default, the **Public** API definition is shown. To view **Admin**
+> endpoints:
+> 1. Log in as an administrator.
+> 2. Select **"admin"** from the definition dropdown in the top-right corner of
+     the Swagger UI.
