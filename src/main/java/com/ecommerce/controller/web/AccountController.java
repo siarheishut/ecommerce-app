@@ -52,14 +52,11 @@ public class AccountController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Redirects to /my-account with success message."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Redirects back to form if validation fails or old password is" +
-              " wrong."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Not Authenticated: Redirects to /login if user is not authenticated.")
+          description = "Redirects based on outcome. <br>" +
+              "• **Success:** Redirects to /my-account with success message. <br>" +
+              "• **Failure:** Redirects back to form (validation fails or wrong old password). " +
+              "<br>" +
+              "• **Not Authenticated:** Redirects to /login.")
   })
   @PostMapping("/change-password")
   public String processChangePassword(
@@ -144,10 +141,9 @@ public class AccountController {
           description = "Token valid, form displayed."),
       @ApiResponse(
           responseCode = "302",
-          description = "Token invalid or expired: Redirects to /login with error message."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Redirects to home page if user is already logged in.")
+          description = "Redirects if token is invalid or user is logged in. <br>" +
+              "• **Token invalid/expired:** Redirects to /login with error message. <br>" +
+              "• **Already logged in:** Redirects to home page.")
   })
   @GetMapping("/reset-password")
   public String showResetPasswordForm(
@@ -179,11 +175,9 @@ public class AccountController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Password changed, redirects to /login."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Redirects back to form (validation error) or /login (invalid" +
-              " token).")
+          description = "Redirects after processing password reset. <br>" +
+              "• **Success:** Password changed, redirects to /login. <br>" +
+              "• **Failure:** Redirects back to form (validation error) or /login (invalid token).")
   })
   @PostMapping("/reset-password")
   public String processResetPassword(

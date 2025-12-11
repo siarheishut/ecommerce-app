@@ -32,10 +32,9 @@ public class FragmentController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "200",
-          description = "Success: Returns address modal HTML fragment."),
-      @ApiResponse(
-          responseCode = "200",
-          description = "Failure: Returns error fragment view if loading fails."),
+          description = "Returns HTML fragment. <br>" +
+              "• **Success:** Address modal HTML. <br>" +
+              "• **Failure:** Error fragment view (if loading fails)."),
       @ApiResponse(
           responseCode = "403",
           description = "Forbidden: User is not authenticated (handled by security).")

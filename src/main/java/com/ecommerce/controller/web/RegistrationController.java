@@ -46,14 +46,13 @@ public class RegistrationController {
   @Operation(summary = "Process registration", description = "Registers a new user account.")
   @ApiResponses(value = {
       @ApiResponse(
-          responseCode = "302",
-          description = "Success: Account created, redirects to login page."),
-      @ApiResponse(
           responseCode = "200",
           description = "Failure: Returns form view with validation error messages."),
       @ApiResponse(
           responseCode = "302",
-          description = "Redirects to home if already logged in.")
+          description = "Redirects based on status. <br>" +
+              "• **Success:** Account created, redirects to login page. <br>" +
+              "• **Already Logged In:** Redirects to home.")
   })
   @PostMapping("/processRegistration")
   public String processRegistration(@Valid @ModelAttribute("user") RegistrationDto registrationDto,

@@ -100,10 +100,9 @@ public class OrderUIController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Order placed, redirects to confirmation page."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Validation errors, redirects back to shipping details form.")
+          description = "Redirects based on outcome. <br>" +
+              "• **Success:** Order placed, redirects to confirmation page. <br>" +
+              "• **Failure:** Validation errors, redirects back to shipping details form.")
   })
   @PostMapping("/place-order")
   public String placeOrder(@Valid @ModelAttribute("shippingDetails")

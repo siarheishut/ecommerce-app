@@ -78,14 +78,13 @@ public class AdminCategoryController {
       description = "Creates a new category or updates an existing one.")
   @ApiResponses(value = {
       @ApiResponse(
-          responseCode = "302",
-          description = "Success: Category saved, redirects to list."),
-      @ApiResponse(
           responseCode = "200",
           description = "Failure: Validation errors, returns form view."),
       @ApiResponse(
           responseCode = "302",
-          description = "Failure: Category ID not found (for update), redirects to list.")
+          description = "Redirects to category list. <br>" +
+              "• **Success:** Category saved. <br>" +
+              "• **Failure:** Category ID not found for update.")
   })
   @PostMapping("/save")
   public String saveCategory(@Valid @ModelAttribute("category") CategoryDto categoryDto,
@@ -139,10 +138,9 @@ public class AdminCategoryController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Category deleted, redirects to referer page."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Category in use, not found, or error, redirects to referer page.")
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Category deleted. <br>" +
+              "• **Failure:** Category in use, not found, or internal error.")
   })
   @DeleteMapping("/delete/{id}")
   public String deleteCategories(
@@ -173,10 +171,9 @@ public class AdminCategoryController {
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "302",
-          description = "Success: Category restored, redirects to referer page."),
-      @ApiResponse(
-          responseCode = "302",
-          description = "Failure: Duplicate name, not found, or error, redirects to referer page.")
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Category restored. <br>" +
+              "• **Failure:** Duplicate name, not found, or internal error.")
   })
   @PostMapping("/restore/{id}")
   public String restoreCategory(
