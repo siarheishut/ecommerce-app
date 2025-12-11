@@ -1,5 +1,7 @@
 # Java Spring E-Commerce Web Application
 
+[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://siarhei-shut-ecommerce.com)
+
 This is a full-stack e-commerce web application built with Java and the Spring
 Boot framework. It features a complete
 shopping experience including product browsing, a shopping cart, user
@@ -42,6 +44,8 @@ products and categories.
     - **Docker** and **Docker Compose** support for containerized deployment.
     - **CI/CD pipeline** configured with GitHub Actions for building and
       deploying to Google Cloud (Cloud Run).
+    - **API Documentation:** Interactive **OpenAPI (Swagger)** documentation for
+      application routes and REST endpoints.
 
 ## Tech Stack
 
@@ -61,16 +65,16 @@ Maven setup.
 ### Option 1: Run with Docker Compose (Recommended)
 
 1. **Clone the repository:**
-2. ```bash
+   ```bash
    git clone https://github.com/siarheishut/ecommerce-app.git
    cd ecommerce-app
    ```
-
 2. **Configure Environment:**
-    - Create a `.env` file in the root directory (or rely on the defaults in
-      `docker-compose.yml`).
-    - Set the required environment variables (DB credentials, Mail settings) as
-      seen in `application.properties.example`.
+
+- Create a `.env` file in the root directory (or rely on the defaults in
+  `docker-compose.yml`).
+- Set the required environment variables (DB credentials, Mail settings) as
+  seen in `application.properties.example`.
 
 3. **Build and Run:**
    ```bash
@@ -78,6 +82,9 @@ Maven setup.
    ```
    The application will be accessible at `http://localhost:8080`. The MySQL
    database will be automatically provisioned in a container.
+   > 📘 **API Documentation:** Once the application is running, you can explore
+   the OpenAPI documentation covering both REST endpoints and MVC routes at:  
+   > `http://localhost:8080/swagger-ui/index.html`
 
 ### Option 2: Local Run (Maven)
 
