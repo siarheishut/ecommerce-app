@@ -4,6 +4,11 @@ import com.ecommerce.dto.ReviewSubmissionDto;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.exception.ReviewReadditionException;
 import com.ecommerce.service.ReviewService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,17 +21,32 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
+@Tag(name = "Review Management", description = "Operations for submitting product reviews.")
 @Controller
 @RequestMapping("/products/{productId}/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
   private final ReviewService reviewService;
 
+  @Operation(summary = "Submit a review", description = "Adds a review for a specific product.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to product page. <br>" +
+              "• **Success:** Review submitted. <br>" +
+              "• **Failure:** Validation error, duplicate review, or product not found " +
+              "(redirects with error).")
+  })
   @PostMapping
-  public String addReview(@PathVariable("productId") Long productId,
-                          @Valid @ModelAttribute("newReview") ReviewSubmissionDto reviewDto,
-                          BindingResult bindingResult,
-                          RedirectAttributes redirectAttributes) {
+  public String addReview(
+      @Parameter(description = "ID of the product being reviewed.")
+      @PathVariable("productId") Long productId,
+
+      @Valid
+      @ModelAttribute("newReview") ReviewSubmissionDto reviewDto,
+
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes) {
     String redirectUrl = "redirect:/products/" + productId;
 
     if (bindingResult.hasErrors()) {

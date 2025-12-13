@@ -11,6 +11,11 @@ import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.service.CategoryService;
 import com.ecommerce.service.ProductService;
 import com.ecommerce.service.ReviewService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -35,40 +40,51 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
+@Tag(name = "Product Catalog", description = "Public facing product listing and details pages.")
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/products")
 @Validated
-@Slf4j
 public class ProductUIController {
   private final ProductService productService;
   private final CategoryService categoryService;
   private final ReviewService reviewService;
   private final ShoppingCart shoppingCart;
 
+  @Operation(
+      summary = "Show product list",
+      description = "Displays the main catalog page with filtering, sorting, and pagination.")
+  @ApiResponse(responseCode = "200", description = "Catalog page displayed successfully.")
   @GetMapping("/list")
   public String showProductList(
+      @Parameter(description = "Search by product name.")
+      @RequestParam(required = false) String name,
+
+      @Parameter(description = "Filter by category IDs.")
+      @RequestParam(required = false) List<Long> categoryIds,
+
+      @Parameter(description = "Minimum price filter.")
       @RequestParam(required = false)
-      String name,
+      @DecimalMin(value = "0.00", message = "Min price must be greater than 0") Double minPrice,
+
+      @Parameter(description = "Maximum price filter.")
       @RequestParam(required = false)
-      List<Long> categoryIds,
-      @RequestParam(required = false)
-      @DecimalMin(value = "0.00", message = "Min price must be greater than 0")
-      Double minPrice,
-      @RequestParam(required = false)
-      @DecimalMax(value = "999999.99", message = "Max price must be less than 1'000'000")
-      Double maxPrice,
-      @RequestParam(required = false)
-      Boolean onlyAvailable,
+      @DecimalMax(value = "999999.99", message = "Max price must be less than 1'000'000") Double maxPrice,
+
+      @Parameter(description = "Show only available items.")
+      @RequestParam(required = false) Boolean onlyAvailable,
+
+      @Parameter(description = "Page number (0-based).")
       @RequestParam(defaultValue = "0")
-      @Min(value = 0, message = "Page number must be greater than or equal to 0")
-      int page,
+      @Min(value = 0, message = "Page number must be greater than or equal to 0") int page,
+
+      @Parameter(description = "Items per page.")
       @RequestParam(defaultValue = "12")
       @Min(value = 1, message = "Page size must be greater than 0")
-      @Max(value = 100, message = "Page size must be less than or equal to 100")
-      int size,
-      Model model,
-      HttpServletRequest request) {
+      @Max(value = 100, message = "Page size must be less than or equal to 100") int size,
+
+      Model model, HttpServletRequest request) {
     log.info("Searching for products with parameters - name: {}, categoryIds: {}, minPrice: {}, " +
             "maxPrice: {}, onlyAvailable: {}, page: {}, size: {}",
         name, categoryIds != null ?
@@ -104,11 +120,25 @@ public class ProductUIController {
     return "public/products-list";
   }
 
+  @Operation(
+      summary = "Show product details",
+      description = "Displays the detailed page for a specific product including reviews.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200",
+          description = "Success: Product found and displayed."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Failure: Product not found, redirects to list with error message.")
+  })
   @GetMapping("/{id}")
-  public String productDetail(@PathVariable("id") Long id, Model model,
-                              @PageableDefault(size = 5) Pageable pageable,
-                              HttpServletRequest request,
-                              RedirectAttributes redirectAttributes) {
+  public String productDetail(
+      @Parameter(description = "ID of the product.")
+      @PathVariable("id") Long id, Model model,
+      
+      @PageableDefault(size = 5) Pageable pageable,
+      HttpServletRequest request,
+      RedirectAttributes redirectAttributes) {
     log.info("Requesting product detail page for product ID: {}", id);
     try {
       Product product = productService.findById(id)

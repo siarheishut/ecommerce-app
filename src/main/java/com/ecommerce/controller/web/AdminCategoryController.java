@@ -5,6 +5,11 @@ import com.ecommerce.entity.Category;
 import com.ecommerce.exception.CategoryInUseException;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.service.CategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
+@Tag(name = "Admin Category Management", description = "Operations for managing categories.")
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/categories")
@@ -31,15 +37,30 @@ public class AdminCategoryController {
     return "categories";
   }
 
+  @Operation(
+      summary = "Show add category form",
+      description = "Displays the form for creating a new category.")
+  @ApiResponse(responseCode = "200", description = "Form displayed successfully.")
   @GetMapping("/add")
   public String showAddForm(Model model) {
     model.addAttribute("category", new CategoryDto());
     return "admin/category-form";
   }
 
+  @Operation(
+      summary = "Show edit category form",
+      description = "Displays the form for editing an existing category.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Form displayed with category data."),
+      @ApiResponse(responseCode = "302", description = "Redirects to list if category not found.")
+  })
   @GetMapping("/edit/{id}")
-  public String showUpdateForm(@PathVariable Long id, Model model,
-                               RedirectAttributes redirectAttributes) {
+  public String showUpdateForm(
+      @Parameter(description = "ID of the category to edit")
+      @PathVariable Long id,
+
+      Model model,
+      RedirectAttributes redirectAttributes) {
     Optional<Category> category = categoryService.findById(id);
     if (category.isEmpty()) {
       redirectAttributes.addFlashAttribute(
@@ -52,6 +73,19 @@ public class AdminCategoryController {
     return "admin/category-form";
   }
 
+  @Operation(
+      summary = "Save category",
+      description = "Creates a new category or updates an existing one.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200",
+          description = "Failure: Validation errors, returns form view."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to category list. <br>" +
+              "• **Success:** Category saved. <br>" +
+              "• **Failure:** Category ID not found for update.")
+  })
   @PostMapping("/save")
   public String saveCategory(@Valid @ModelAttribute("category") CategoryDto categoryDto,
                              BindingResult bindingResult, RedirectAttributes redirectAttributes) {
@@ -75,10 +109,19 @@ public class AdminCategoryController {
     return "redirect:/admin/categories/list";
   }
 
+  @Operation(
+      summary = "List categories",
+      description = "Displays a list of categories with optional filtering.")
+  @ApiResponse(responseCode = "200", description = "List displayed successfully.")
   @GetMapping("/list")
-  public String listCategories(@RequestParam(value = "keyword", required = false) String keyword,
-                               @RequestParam(value = "status", defaultValue = "all") String status,
-                               Model model) {
+  public String listCategories(
+      @Parameter(description = "Search keyword.")
+      @RequestParam(value = "keyword", required = false) String keyword,
+
+      @Parameter(description = "Filter by status.")
+      @RequestParam(value = "status", defaultValue = "all") String status,
+
+      Model model) {
     List<Category> categories;
     if (keyword != null && !keyword.trim().isEmpty()) {
       categories = categoryService.searchByNameForAdmin(keyword, status);
@@ -91,10 +134,21 @@ public class AdminCategoryController {
     return "admin/categories-list";
   }
 
+  @Operation(summary = "Delete category", description = "Deletes a category if it is not in use.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Category deleted. <br>" +
+              "• **Failure:** Category in use, not found, or internal error.")
+  })
   @DeleteMapping("/delete/{id}")
-  public String deleteCategories(@PathVariable Long id,
-                                 RedirectAttributes redirectAttributes,
-                                 HttpServletRequest request) {
+  public String deleteCategories(
+      @Parameter(description = "ID of the category to delete.")
+      @PathVariable Long id,
+
+      RedirectAttributes redirectAttributes,
+      HttpServletRequest request) {
     try {
       categoryService.deleteById(id);
       redirectAttributes.addFlashAttribute("successMessage", "Category deleted successfully.");
@@ -113,10 +167,21 @@ public class AdminCategoryController {
     return "redirect:" + (referer != null ? referer : "/admin/categories/list");
   }
 
+  @Operation(summary = "Restore category", description = "Restores a deleted category.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Category restored. <br>" +
+              "• **Failure:** Duplicate name, not found, or internal error.")
+  })
   @PostMapping("/restore/{id}")
-  public String restoreCategory(@PathVariable Long id,
-                                RedirectAttributes redirectAttributes,
-                                HttpServletRequest request) {
+  public String restoreCategory(
+      @Parameter(description = "ID of the category to restore.")
+      @PathVariable Long id,
+
+      RedirectAttributes redirectAttributes,
+      HttpServletRequest request) {
     try {
       categoryService.restoreById(id);
       redirectAttributes.addFlashAttribute("successMessage", "Category restored successfully.");

@@ -25,18 +25,31 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
     http
         .authorizeHttpRequests(configurer ->
             configurer
                 .requestMatchers(
-                    "/api/auth/**", "/cart/**", "/", "/products/list", "/products/**",
-                    "/login", "/logout", "/register", "/processRegistration", "/error",
-                    "/forgot-password", "/reset-password", "/access-denied", "/favicon.ico",
-                    "/orders/shipping-details", "/orders/place-order", "/orders/confirmation")
+                    "/api/auth/**", "/api/cart/**", "/cart/**", "/", "/products/list",
+                    "/products/**", "/login", "/logout", "/register", "/error",
+                    "/processRegistration", "/forgot-password", "/reset-password",
+                    "/access-denied", "/favicon.ico", "/orders/shipping-details",
+                    "/orders/place-order", "/orders/confirmation")
                 .permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+
+                .requestMatchers("/admin/**")
+                .hasRole("ADMIN")
+
+                .requestMatchers("/v3/api-docs/admin")
+                .hasRole("ADMIN")
+
+                .requestMatchers("/v3/api-docs/**")
+                .permitAll()
+
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html")
+                .permitAll()
+
+                .anyRequest()
+                .authenticated()
         )
         .formLogin(form ->
             form

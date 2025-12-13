@@ -4,6 +4,9 @@ import com.ecommerce.dto.AddressDto;
 import com.ecommerce.dto.UserInfoDto;
 import com.ecommerce.entity.User;
 import com.ecommerce.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -11,11 +14,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+@Tag(name = "Home Page", description = "Main landing page and common attributes.")
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
   private final UserService userService;
 
+  @Operation(summary = "Show home page", description = "Displays the public landing page.")
+  @ApiResponse(responseCode = "200", description = "Page displayed successfully.")
   @GetMapping("/")
   public String home() {
     return "public/index";

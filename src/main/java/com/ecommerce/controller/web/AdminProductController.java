@@ -6,6 +6,11 @@ import com.ecommerce.entity.Product;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.service.CategoryService;
 import com.ecommerce.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
+@Tag(name = "Admin Product Management", description = "Operations for managing products.")
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/products")
@@ -33,6 +39,10 @@ public class AdminProductController {
     return "products";
   }
 
+  @Operation(
+      summary = "Show add product form",
+      description = "Displays the form for creating a new product.")
+  @ApiResponse(responseCode = "200", description = "Form displayed successfully.")
   @GetMapping("/add")
   public String showAddForm(Model model) {
     model.addAttribute("product", new ProductDto());
@@ -40,9 +50,24 @@ public class AdminProductController {
     return "admin/product-form";
   }
 
+  @Operation(
+      summary = "Show edit product form",
+      description = "Displays the form for editing an existing product.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200",
+          description = "Form displayed with product data."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to list if product not found.")
+  })
   @GetMapping("/edit/{id}")
-  public String showUpdateForm(@PathVariable Long id, Model model,
-                               RedirectAttributes redirectAttributes) {
+  public String showUpdateForm(
+      @Parameter(description = "ID of the product to edit.")
+      @PathVariable Long id,
+
+      Model model,
+      RedirectAttributes redirectAttributes) {
     Optional<Product> product = productService.findById(id);
     if (product.isEmpty()) {
       redirectAttributes.addFlashAttribute("errorMessage", "Product not found with id: " + id);
@@ -54,6 +79,19 @@ public class AdminProductController {
     return "admin/product-form";
   }
 
+  @Operation(
+      summary = "Save product",
+      description = "Creates a new product or updates an existing one.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "200",
+          description = "Failure: Validation errors, returns form view."),
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to product list. <br>" +
+              "• **Success:** Product saved. <br>" +
+              "• **Failure:** Product ID not found for update.")
+  })
   @PostMapping("/save")
   public String saveProduct(
       @Valid @ModelAttribute("product") ProductDto productDto,
@@ -75,11 +113,21 @@ public class AdminProductController {
     return "redirect:/admin/products/list";
   }
 
+  @Operation(
+      summary = "List products",
+      description = "Displays a list of  with optional filtering.")
+  @ApiResponse(responseCode = "200", description = "List displayed successfully.")
   @GetMapping("/list")
   public String listProducts(
+      @Parameter(description = "Search keyword for product name.")
       @RequestParam(value = "keyword", required = false) String keyword,
+
+      @Parameter(description = "Filter by category IDs.")
       @RequestParam(value = "categoryIds", required = false) List<Long> categoryIds,
+
+      @Parameter(description = "Filter by status (active/archived).")
       @RequestParam(value = "status", defaultValue = "all") String status,
+
       Model model) {
 
     List<ProductAdminView> products;
@@ -100,10 +148,21 @@ public class AdminProductController {
     return "admin/products-list";
   }
 
+  @Operation(summary = "Delete product", description = "Soft-deletes a product by ID.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Product deleted. <br>" +
+              "• **Failure:** Product not found or internal error.")
+  })
   @DeleteMapping("/delete/{id}")
-  public String deleteProducts(@PathVariable Long id,
-                               RedirectAttributes redirectAttributes,
-                               HttpServletRequest request) {
+  public String deleteProducts(
+      @Parameter(description = "ID of the product to delete.")
+      @PathVariable Long id,
+
+      RedirectAttributes redirectAttributes,
+      HttpServletRequest request) {
     try {
       productService.deleteById(id);
       log.info("Admin deleted product with id: {}", id);
@@ -120,10 +179,21 @@ public class AdminProductController {
     return "redirect:" + (referer != null ? referer : "/admin/products/list");
   }
 
+  @Operation(summary = "Restore product", description = "Restores a soft-deleted product.")
+  @ApiResponses(value = {
+      @ApiResponse(
+          responseCode = "302",
+          description = "Redirects to referer page. <br>" +
+              "• **Success:** Product restored. <br>" +
+              "• **Failure:** Product not found or internal error.")
+  })
   @PostMapping("/restore/{id}")
-  public String restoreProduct(@PathVariable Long id,
-                               RedirectAttributes redirectAttributes,
-                               HttpServletRequest request) {
+  public String restoreProduct(
+      @Parameter(description = "ID of the product to restore.")
+      @PathVariable Long id,
+
+      RedirectAttributes redirectAttributes,
+      HttpServletRequest request) {
     try {
       productService.restoreById(id);
       log.info("Admin restored product with id: {}", id);
