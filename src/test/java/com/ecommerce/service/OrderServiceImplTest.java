@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +40,8 @@ public class OrderServiceImplTest {
   private UserService userService;
   @Mock
   private EmailService emailService;
+  @Mock
+  private ExecutorService notificationExecutor;
 
   @InjectMocks
   private OrderServiceImpl orderService;
@@ -62,6 +65,12 @@ public class OrderServiceImplTest {
 
   @Test
   void whenPlaceOrderFromCart_withValidDataForGuest_createsOrderAndClearsCart() {
+    doAnswer(invocation -> {
+      Runnable r = invocation.getArgument(0);
+      r.run();
+      return null;
+    }).when(notificationExecutor).execute(any(Runnable.class));
+
     ShippingDetailsDto shippingDto = new ShippingDetailsDto(
         "Tom", "Sawyer", "tom.sawyer@gmail.com", "123456789", "Some Address line",
         "Some City", "Some Country", "12345");
@@ -96,11 +105,17 @@ public class OrderServiceImplTest {
     verify(productRepository).saveAll(productListCaptor.capture());
 
     verify(cartService).removeItem(1L);
-    verify(emailService).sendOrderConfirmationEmail(savedOrder);
+    verify(emailService).sendOrderConfirmationEmail(OrderEmailDto.fromEntity(savedOrder));
   }
 
   @Test
   void whenPlaceOrderFromCart_withValidDataForAuthenticatedUser_createsOrderAndClearsCart() {
+    doAnswer(invocation -> {
+      Runnable r = invocation.getArgument(0);
+      r.run();
+      return null;
+    }).when(notificationExecutor).execute(any(Runnable.class));
+
     ShippingDetailsDto shippingDto = new ShippingDetailsDto(
         "Tom", "Sawyer", "tom.sawyer@gmail.com", "123456789", "Some Address line",
         "Some City", "Some Country", "12345");
@@ -117,7 +132,6 @@ public class OrderServiceImplTest {
     when(cartService.getCartForCurrentUser()).thenReturn(cartView);
     when(userService.getCurrentUser()).thenReturn(currentUser);
     when(productRepository.findAllById(any())).thenReturn(List.of(product));
-
     orderService.placeOrder(shippingDto);
 
     verify(orderRepository).save(orderCaptor.capture());
@@ -128,7 +142,7 @@ public class OrderServiceImplTest {
     verify(product).setStockQuantity(9);
 
     verify(cartService).removeItem(1L);
-    verify(emailService).sendOrderConfirmationEmail(savedOrder);
+    verify(emailService).sendOrderConfirmationEmail(OrderEmailDto.fromEntity(savedOrder));
   }
 
   @Test

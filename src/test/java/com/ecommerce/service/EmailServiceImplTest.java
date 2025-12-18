@@ -1,7 +1,6 @@
 package com.ecommerce.service;
 
-import com.ecommerce.entity.Order;
-import com.ecommerce.entity.ShippingDetails;
+import com.ecommerce.dto.OrderEmailDto;
 import com.ecommerce.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceImplTest {
@@ -36,17 +36,15 @@ public class EmailServiceImplTest {
 
   @Test
   void whenSendOrderConfirmationEmail_mailIsSentWithCorrectDetails() {
-    ShippingDetails shippingDetails = mock(ShippingDetails.class);
-    when(shippingDetails.getEmail()).thenReturn("customer@gmail.com");
-    when(shippingDetails.getFirstName()).thenReturn("Tom");
+    OrderEmailDto orderEmailDto = new OrderEmailDto(
+        123L,
+        "customer@gmail.com",
+        "Tom",
+        Instant.now(),
+        new BigDecimal("100.00")
+    );
 
-    Order order = mock(Order.class);
-    when(order.getId()).thenReturn(123L);
-    when(order.getShippingDetails()).thenReturn(shippingDetails);
-    when(order.getOrderDate()).thenReturn(Instant.now());
-    when(order.getTotalAmount()).thenReturn(new BigDecimal("100.00"));
-
-    emailService.sendOrderConfirmationEmail(order);
+    emailService.sendOrderConfirmationEmail(orderEmailDto);
 
     ArgumentCaptor<SimpleMailMessage> messageCaptor =
         ArgumentCaptor.forClass(SimpleMailMessage.class);
@@ -64,8 +62,8 @@ public class EmailServiceImplTest {
 
   @Test
   void whenSendPasswordResetEmail_mailIsSentWithCorrectLink() {
-    User user = mock(User.class);
-    when(user.getEmail()).thenReturn("customer@gmail.com");
+    User user = new User();
+    user.setEmail("customer@gmail.com");
     String token = "secure-reset-token";
 
     emailService.sendPasswordResetEmail(user, token);

@@ -1,6 +1,6 @@
 package com.ecommerce.service;
 
-import com.ecommerce.entity.Order;
+import com.ecommerce.dto.OrderEmailDto;
 import com.ecommerce.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,10 +17,10 @@ public class EmailServiceImpl implements EmailService {
   private String appBaseUrl;
 
   @Override
-  public void sendOrderConfirmationEmail(Order order) {
+  public void sendOrderConfirmationEmail(OrderEmailDto order) {
     SimpleMailMessage message = new SimpleMailMessage();
     message.setFrom("no-reply@ecommerce.com");
-    message.setTo(order.getShippingDetails().getEmail());
+    message.setTo(order.email());
     message.setSubject("E-commerce Order Confirmation");
 
     String emailBody = String.format(
@@ -36,10 +36,10 @@ public class EmailServiceImpl implements EmailService {
             
             Thank you for shopping with us!
             The E-commerce Team""",
-        order.getShippingDetails().getFirstName(),
-        order.getId(),
-        order.getOrderDate(),
-        order.getTotalAmount()
+        order.firstName(),
+        order.orderId(),
+        order.orderDate(),
+        order.totalPrice()
     );
 
     message.setText(emailBody);
