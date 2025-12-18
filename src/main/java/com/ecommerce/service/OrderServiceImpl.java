@@ -9,14 +9,20 @@ import com.ecommerce.exception.UserNotAuthenticatedException;
 import com.ecommerce.repository.OrderRepository;
 import com.ecommerce.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -25,6 +31,7 @@ public class OrderServiceImpl implements OrderService {
   private final CartService cartService;
   private final UserService userService;
   private final EmailService emailService;
+  private final ExecutorService notificationExecutor;
 
   private static ShippingDetails getShippingDetails(ShippingDetailsDto shippingDetailsDto) {
     ShippingDetails shippingDetails = new ShippingDetails();
@@ -101,7 +108,31 @@ public class OrderServiceImpl implements OrderService {
     for (Long id : productIds) {
       cartService.removeItem(id);
     }
-    emailService.sendOrderConfirmationEmail(order);
+
+    OrderEmailDto emailDto = OrderEmailDto.fromEntity(order);
+
+    Runnable emailTask = () -> {
+      CompletableFuture.runAsync(() ->
+              emailService.sendOrderConfirmationEmail(emailDto), notificationExecutor)
+          .exceptionally(ex -> {
+            log.error("Failed to send email for order {}", emailDto.orderId(), ex);
+            return null;
+          });
+    };
+
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        @Override
+        public void afterCommit() {
+          log.info("Transaction committed. Triggering email for order {}", emailDto.orderId());
+          emailTask.run();
+        }
+      });
+    } else {
+      // Fallback for Unit Tests
+      log.warn("No transaction active. Sending email immediately (Test).");
+      emailTask.run();
+    }
   }
 
   @Override
