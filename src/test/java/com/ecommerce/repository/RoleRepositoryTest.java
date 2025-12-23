@@ -1,5 +1,6 @@
 package com.ecommerce.repository;
 
+import com.ecommerce.AbstractIntegrationTest;
 import com.ecommerce.entity.Role;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -8,7 +9,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import java.util.Optional;
 
@@ -17,8 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@TestPropertySource(properties = {"spring.sql.init.mode=never"})
-class RoleRepositoryTest {
+class RoleRepositoryTest extends AbstractIntegrationTest {
 
   @Autowired
   private TestEntityManager entityManager;
@@ -52,7 +51,7 @@ class RoleRepositoryTest {
 
     assertThatThrownBy(() -> roleRepository.saveAndFlush(duplicateRole))
         .isInstanceOf(DataIntegrityViolationException.class)
-        .hasMessageContaining("Unique index or primary key violation");
+        .hasMessageContaining("Duplicate entry");
   }
 
   @Test

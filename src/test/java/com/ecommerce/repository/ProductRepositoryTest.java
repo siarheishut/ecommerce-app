@@ -1,5 +1,6 @@
 package com.ecommerce.repository;
 
+import com.ecommerce.AbstractIntegrationTest;
 import com.ecommerce.dto.ProductAdminView;
 import com.ecommerce.entity.Category;
 import com.ecommerce.entity.Product;
@@ -10,7 +11,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,8 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@TestPropertySource(properties = {"spring.sql.init.mode=never"})
-class ProductRepositoryTest {
+class ProductRepositoryTest extends AbstractIntegrationTest {
 
   @Autowired
   private TestEntityManager entityManager;
