@@ -49,33 +49,29 @@ public class CartApiController {
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
           description = "Cart update payload.", required = true)
       @RequestBody CartUpdateDto cartUpdateDto) {
-    try {
-      cartService.updateProductQuantity(cartUpdateDto.getProductId(), cartUpdateDto.getQuantity());
+    cartService.updateProductQuantity(cartUpdateDto.getProductId(), cartUpdateDto.getQuantity());
 
-      CartViewDto updatedCart = cartService.getCartForCurrentUser();
+    CartViewDto updatedCart = cartService.getCartForCurrentUser();
 
-      CartItemViewDto updatedItem = updatedCart.items().stream()
-          .filter(item -> item.product().id().equals(cartUpdateDto.getProductId()))
-          .findFirst()
-          .orElse(null);
+    CartItemViewDto updatedItem = updatedCart.items().stream()
+        .filter(item -> item.product().id().equals(cartUpdateDto.getProductId()))
+        .findFirst()
+        .orElse(null);
 
-      if (updatedItem == null) {
-        return ResponseEntity.ok(Map.of(
-            "removed", true,
-            "totalAmount", updatedCart.totalAmount(),
-            "isEmpty", updatedCart.items().isEmpty()
-        ));
-      }
-
+    if (updatedItem == null) {
       return ResponseEntity.ok(Map.of(
-          "status", "success",
-          "itemTotal", updatedItem.product().inCartQuantity() *
-              updatedItem.product().price().doubleValue(),
-          "grandTotal", updatedCart.totalAmount()
+          "removed", true,
+          "totalAmount", updatedCart.totalAmount(),
+          "isEmpty", updatedCart.items().isEmpty()
       ));
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     }
+
+    return ResponseEntity.ok(Map.of(
+        "status", "success",
+        "itemTotal", updatedItem.product().inCartQuantity() *
+            updatedItem.product().price().doubleValue(),
+        "grandTotal", updatedCart.totalAmount()
+    ));
   }
 
   @Operation(summary = "Remove item", description = "Removes a product from the cart.")
@@ -93,17 +89,13 @@ public class CartApiController {
   public ResponseEntity<?> removeItem(
       @Parameter(description = "ID of the product to remove.", required = true, example = "101")
       @RequestParam("productId") Long productId) {
-    try {
-      cartService.removeItem(productId);
-      CartViewDto updatedCart = cartService.getCartForCurrentUser();
+    cartService.removeItem(productId);
+    CartViewDto updatedCart = cartService.getCartForCurrentUser();
 
-      return ResponseEntity.ok(Map.of(
-          "status", "success",
-          "totalAmount", updatedCart.totalAmount(),
-          "isEmpty", updatedCart.items().isEmpty()
-      ));
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-    }
+    return ResponseEntity.ok(Map.of(
+        "status", "success",
+        "totalAmount", updatedCart.totalAmount(),
+        "isEmpty", updatedCart.items().isEmpty()
+    ));
   }
 }
