@@ -1,5 +1,6 @@
 package com.ecommerce.repository;
 
+import com.ecommerce.AbstractIntegrationTest;
 import com.ecommerce.entity.Cart;
 import com.ecommerce.entity.CartItem;
 import com.ecommerce.entity.Product;
@@ -18,8 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@TestPropertySource(properties = {"spring.sql.init.mode=never"})
-class CartRepositoryTest {
+class CartRepositoryTest extends AbstractIntegrationTest {
 
   @Autowired
   private TestEntityManager entityManager;

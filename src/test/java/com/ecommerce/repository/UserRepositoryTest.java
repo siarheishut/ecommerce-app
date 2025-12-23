@@ -1,5 +1,6 @@
 package com.ecommerce.repository;
 
+import com.ecommerce.AbstractIntegrationTest;
 import com.ecommerce.entity.User;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,8 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@TestPropertySource(properties = {"spring.sql.init.mode=never"})
-class UserRepositoryTest {
+class UserRepositoryTest extends AbstractIntegrationTest {
 
   @Autowired
   private TestEntityManager entityManager;
