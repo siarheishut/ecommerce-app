@@ -24,9 +24,6 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private final List<Address> addresses = new ArrayList<>();
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private final List<Order> orders = new ArrayList<>();
-
   @ManyToMany(fetch = FetchType.EAGER,
       cascade = {
           CascadeType.DETACH,
