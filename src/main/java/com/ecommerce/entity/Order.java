@@ -7,6 +7,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,9 +17,17 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @Getter
+@NamedEntityGraph(
+    name = "Order.withDetailsAndItems",
+    attributeNodes = {
+        @NamedAttributeNode("shippingDetails"),
+        @NamedAttributeNode("orderItems")
+    }
+)
 @Table(name = "orders")
 public class Order {
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @BatchSize(size = 20)
   @NotEmpty(message = "Order must contain at least one item.")
   private final List<OrderItem> orderItems = new ArrayList<>();
 
