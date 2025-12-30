@@ -87,7 +87,7 @@ public class OrderServiceImplTest {
 
     when(cartService.getCartForCurrentUser()).thenReturn(cartView);
     when(userService.getCurrentUser()).thenReturn(null);
-    when(productRepository.findAllById(List.of(1L))).thenReturn(List.of(product));
+    when(productRepository.findAllByIdWithLock(List.of(1L))).thenReturn(List.of(product));
 
     orderService.placeOrder(shippingDto);
 
@@ -131,7 +131,7 @@ public class OrderServiceImplTest {
 
     when(cartService.getCartForCurrentUser()).thenReturn(cartView);
     when(userService.getCurrentUser()).thenReturn(currentUser);
-    when(productRepository.findAllById(any())).thenReturn(List.of(product));
+    when(productRepository.findAllByIdWithLock(any())).thenReturn(List.of(product));
     orderService.placeOrder(shippingDto);
 
     verify(orderRepository).save(orderCaptor.capture());
@@ -173,7 +173,7 @@ public class OrderServiceImplTest {
     when(cartService.getCartForCurrentUser()).thenReturn(cartView);
     when(userService.getCurrentUser()).thenReturn(null);
 
-    when(productRepository.findAllById(List.of(1L))).thenReturn(Collections.emptyList());
+    when(productRepository.findAllByIdWithLock(any())).thenReturn(Collections.emptyList());
 
     ResourceNotFoundException exception = assertThrows(
         ResourceNotFoundException.class,
