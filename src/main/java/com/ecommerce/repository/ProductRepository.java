@@ -2,10 +2,9 @@ package com.ecommerce.repository;
 
 import com.ecommerce.dto.ProductAdminView;
 import com.ecommerce.entity.Product;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,4 +48,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
   @Query(value = "SELECT * FROM products WHERE id = :id", nativeQuery = true)
   Optional<Product> findByIdWithDeleted(Long id);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT p FROM Product p WHERE p.id IN :ids")
+  List<Product> findAllByIdWithLock(@Param("ids") List<Long> ids);
 }

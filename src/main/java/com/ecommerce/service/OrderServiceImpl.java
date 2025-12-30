@@ -60,6 +60,16 @@ public class OrderServiceImpl implements OrderService {
       throw new EmptyCartOrderException("Cannot create order from an empty cart.");
     }
 
+    List<Long> productIds = cartView.items().stream()
+        .map(item -> item.product().id())
+        .sorted()
+        .toList();
+
+    List<Product> lockedProducts = productRepository.findAllByIdWithLock(productIds);
+
+    Map<Long, Product> productMap = lockedProducts.stream()
+        .collect(Collectors.toMap(Product::getId, Function.identity()));
+
     Order order = new Order();
     try {
       order.setUser(userService.getCurrentUser());
@@ -71,17 +81,11 @@ public class OrderServiceImpl implements OrderService {
     order.setOrderDate(Instant.now());
     order.setStatus(Order.Status.PENDING);
     order.setShippingDetails(shippingDetails);
-    List<Long> productIds = cartView.items().stream()
-        .map(item -> item.product().id())
-        .toList();
-    List<Product> productsToUpdate = new ArrayList<>();
 
-    Map<Long, Product> productMap = productRepository.findAllById(productIds).stream()
-        .collect(Collectors.toMap(Product::getId, Function.identity()));
+    List<Product> productsToUpdate = new ArrayList<>();
 
     List<OrderItem> orderItems = new ArrayList<>();
     for (CartItemViewDto cartItem : cartView.items()) {
-      Long productId = cartItem.product().id();
       int quantity = cartItem.product().inCartQuantity();
       Product product = productMap.get(cartItem.product().id());
 
@@ -105,10 +109,12 @@ public class OrderServiceImpl implements OrderService {
 
     productRepository.saveAll(productsToUpdate);
     orderRepository.save(order);
-    for (Long id : productIds) {
-      cartService.removeItem(id);
-    }
+    productIds.forEach(cartService::removeItem);
 
+    scheduleOrderConfirmationEmail(order);
+  }
+
+  private void scheduleOrderConfirmationEmail(Order order) {
     OrderEmailDto emailDto = OrderEmailDto.fromEntity(order);
 
     Runnable emailTask = () -> {
